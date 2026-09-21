@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu as MenuIcon, ShoppingBag, User, X, ArrowLeft, Flame } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
-import { useAuth } from '../../contexts/AuthContext';
 import { cn } from '../../lib/utils';
 import { DEMO_RESTAURANT } from '../../services/demoData';
 
@@ -10,7 +9,6 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobile, setMobile] = useState(false);
   const { count } = useCart();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
@@ -56,15 +54,21 @@ export function Navbar() {
             {isHome ? <MenuIcon className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
           </button>
 
-          <Link to="/" className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 rounded-2xl bg-flame-gradient flex items-center justify-center shadow-glow">
-              <Flame className="w-5 h-5 text-white" />
+          {/* PREMIUM LOGO */}
+          <Link to="/" className="flex items-center gap-3 sm:gap-4 shrink-0 group">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-2xl bg-flame-gradient blur-lg opacity-60 group-hover:opacity-100 transition-opacity" />
+              <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-flame-gradient flex items-center justify-center border-2 border-white/20 shadow-lg">
+                <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow" strokeWidth={2.5} />
+              </div>
             </div>
-            <div className="hidden sm:block">
-              <p className="font-bold leading-none">{DEMO_RESTAURANT.name}</p>
-              <p className="text-[10px] text-white/50 leading-none mt-0.5">
-                {DEMO_RESTAURANT.tagline}
-              </p>
+            <div className="hidden sm:flex flex-col leading-none">
+              <span className="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-white to-ember-300 bg-clip-text text-transparent">
+                emynfc
+              </span>
+              <span className="text-[9px] sm:text-[10px] font-medium tracking-[0.2em] text-ember-400/90 mt-1">
+                RESTAURANT
+              </span>
             </div>
           </Link>
 
@@ -77,7 +81,9 @@ export function Navbar() {
                 className={({ isActive }) =>
                   cn(
                     'px-4 py-2 rounded-xl text-sm font-medium transition',
-                    isActive ? 'text-white bg-white/5' : 'text-white/70 hover:text-white hover:bg-white/5'
+                    isActive
+                      ? 'text-white bg-white/5'
+                      : 'text-white/70 hover:text-white hover:bg-white/5'
                   )
                 }
               >
@@ -120,31 +126,21 @@ export function Navbar() {
       </header>
 
       {mobile && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+        <div className="fixed inset-0 z-[999] md:hidden">
           <div
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)' }}
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setMobile(false)}
           />
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: '80%',
-              maxWidth: '320px',
-              background: '#16161d',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
+          <div className="absolute left-0 top-0 bottom-0 w-80 max-w-[85%] bg-charcoal-900 p-6 flex flex-col border-r border-white/10">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-flame-gradient flex items-center justify-center">
-                  <Flame className="w-5 h-5 text-white" />
+                <div className="w-11 h-11 rounded-2xl bg-flame-gradient flex items-center justify-center border-2 border-white/20 shadow-lg">
+                  <Flame className="w-5 h-5 text-white" strokeWidth={2.5} />
                 </div>
-                <span className="font-bold">{DEMO_RESTAURANT.name}</span>
+                <div className="flex flex-col leading-none">
+                  <span className="font-extrabold tracking-tight">emynfc</span>
+                  <span className="text-[9px] tracking-[0.2em] text-ember-400/90 mt-1">RESTAURANT</span>
+                </div>
               </div>
               <button
                 onClick={() => setMobile(false)}
@@ -165,7 +161,9 @@ export function Navbar() {
                   className={({ isActive }) =>
                     cn(
                       'px-4 py-3 rounded-2xl text-base font-medium transition',
-                      isActive ? 'bg-flame-gradient text-white' : 'text-white/80 hover:bg-white/5'
+                      isActive
+                        ? 'bg-flame-gradient text-white'
+                        : 'text-white/80 hover:bg-white/5'
                     )
                   }
                 >
@@ -173,11 +171,11 @@ export function Navbar() {
                 </NavLink>
               ))}
               <NavLink
-                to={user ? '/account' : '/login'}
+                to="/account"
                 onClick={() => setMobile(false)}
                 className="px-4 py-3 rounded-2xl text-white/80 hover:bg-white/5 transition"
               >
-                {user ? 'Account' : 'Sign in'}
+                Account
               </NavLink>
               <NavLink
                 to="/cart"

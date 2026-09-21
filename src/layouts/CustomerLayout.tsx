@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Navbar } from '../components/navigation/Navbar';
 import { Footer } from '../components/navigation/Footer';
 import { MobileBottomNav } from '../components/navigation/MobileBottomNav';
-import { WhatsAppButton } from '../components/WhatsAppButton';
 
 export default function CustomerLayout() {
   return (
@@ -17,7 +16,6 @@ export default function CustomerLayout() {
         <Outlet />
       </motion.main>
       <Footer />
-      <WhatsAppButton />
       <MobileBottomNav />
     </div>
   );

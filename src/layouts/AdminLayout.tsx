@@ -1,10 +1,11 @@
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ClipboardList, CalendarClock, ArrowLeft, Flame, LogOut, HardDrive } from 'lucide-react';
+import { LayoutDashboard, Package, ClipboardList, CalendarClock, ArrowLeft, Flame, LogOut, HardDrive, BarChart3 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 
 const items = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
+  { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/admin/orders', icon: ClipboardList, label: 'Orders' },
   { to: '/admin/products', icon: Package, label: 'Products' },
   { to: '/admin/reservations', icon: CalendarClock, label: 'Bookings' },
@@ -69,7 +70,7 @@ export default function AdminLayout() {
       </div>
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-charcoal-900/95 backdrop-blur-xl border-t border-white/10">
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {items.map(({ to, icon: Icon, label, end }) => (
             <NavLink
               key={to}
@@ -90,4 +91,5 @@ export default function AdminLayout() {
       </nav>
     </div>
   );
-}
+}	
+
