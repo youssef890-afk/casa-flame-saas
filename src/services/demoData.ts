@@ -14,6 +14,7 @@ export const DEMO_RESTAURANT = {
   social: {
     instagram: 'https://instagram.com/emynfc',
     facebook: 'https://facebook.com/emynfc',
+    tiktok: 'https://tiktok.com/@emynfc',
   },
 };
 
