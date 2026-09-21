@@ -21,6 +21,7 @@ import AdminDashboard from './pages/admin/DashboardPage';
 import AdminProducts from './pages/admin/ProductsPage';
 import AdminOrders from './pages/admin/OrdersPage';
 import AdminReservations from './pages/admin/ReservationsPage';
+import AdminCategories from './pages/admin/CategoriesPage';
 import BackupPage from './pages/admin/BackupPage';
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
       <Route path="/admin" element={<ProtectedAdmin><AdminLayout /></ProtectedAdmin>}>
         <Route index element={<AdminDashboard />} />
         <Route path="products" element={<AdminProducts />} />
+        <Route path="categories" element={<AdminCategories />} />
         <Route path="orders" element={<AdminOrders />} />
         <Route path="reservations" element={<AdminReservations />} />
         <Route path="backup" element={<BackupPage />} />

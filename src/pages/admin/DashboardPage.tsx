@@ -1,15 +1,19 @@
 import { DollarSign, ShoppingCart, CalendarClock, Package } from 'lucide-react';
 import { useProducts } from '../../contexts/ProductsContext';
+import { useOrders } from '../../contexts/OrdersContext';
+import { useReservations } from '../../contexts/ReservationsContext';
 import { formatPrice } from '../../lib/utils';
 
 export default function DashboardPage() {
   const { products } = useProducts();
+  const { orders, stats: orderStats } = useOrders();
+  const { reservations, stats: resStats } = useReservations();
 
   const stats = [
-    { label: "Today's Revenue", value: 4250, icon: DollarSign, color: 'from-ember-500/20 to-ember-500/0', text: 'text-ember-400', money: true },
-    { label: "Today's Orders", value: 28, icon: ShoppingCart, color: 'from-gold-500/20 to-gold-500/0', text: 'text-gold-400', money: false },
-    { label: "Reservations", value: 12, icon: CalendarClock, color: 'from-crimson-500/20 to-crimson-500/0', text: 'text-crimson-400', money: false },
-    { label: "Products", value: products.length, icon: Package, color: 'from-emerald-500/20 to-emerald-500/0', text: 'text-emerald-400', money: false },
+    { label: "Today's Revenue", value: formatPrice(orderStats.todayRevenue), icon: DollarSign, color: 'from-ember-500/20 to-ember-500/0', text: 'text-ember-400' },
+    { label: "Today's Orders", value: orderStats.todayCount, icon: ShoppingCart, color: 'from-gold-500/20 to-gold-500/0', text: 'text-gold-400' },
+    { label: 'Reservations', value: resStats.total, icon: CalendarClock, color: 'from-crimson-500/20 to-crimson-500/0', text: 'text-crimson-400' },
+    { label: 'Products', value: products.length, icon: Package, color: 'from-emerald-500/20 to-emerald-500/0', text: 'text-emerald-400' },
   ];
 
   return (
@@ -30,9 +34,7 @@ export default function DashboardPage() {
                   <s.icon className="w-5 h-5" />
                 </div>
               </div>
-              <p className="text-2xl font-bold">
-                {s.money ? formatPrice(s.value) : s.value}
-              </p>
+              <p className="text-2xl font-bold">{s.value}</p>
             </div>
           </div>
         ))}
@@ -56,13 +58,33 @@ export default function DashboardPage() {
         </div>
 
         <div className="rounded-3xl bg-charcoal-900/60 border border-white/5 p-6">
-          <h2 className="font-bold mb-4">Recent activity</h2>
-          <div className="space-y-3 text-sm">
-            <p className="text-white/60"><span className="text-white">Order #1042</span> - Preparing - 12:24</p>
-            <p className="text-white/60"><span className="text-white">Order #1041</span> - Ready - 12:15</p>
-            <p className="text-white/60"><span className="text-white">Reservation</span> - 4 guests - 20:00</p>
-            <p className="text-white/60"><span className="text-white">Order #1040</span> - Delivered - 12:02</p>
+          <h2 className="font-bold mb-4">Recent orders</h2>
+          <div className="space-y-3">
+            {orders.slice(0, 5).map((o) => (
+              <div key={o.id} className="flex items-center justify-between text-sm">
+                <div>
+                  <span className="text-white font-medium">{o.id}</span>
+                  <span className="text-white/40 ml-2">{o.customer}</span>
+                </div>
+                <span className="text-ember-400">{formatPrice(o.total)}</span>
+              </div>
+            ))}
           </div>
+        </div>
+      </div>
+
+      <div className="rounded-3xl bg-charcoal-900/60 border border-white/5 p-6">
+        <h2 className="font-bold mb-4">Recent reservations</h2>
+        <div className="space-y-3">
+          {reservations.slice(0, 4).map((r) => (
+            <div key={r.id} className="flex items-center justify-between text-sm">
+              <div>
+                <span className="text-white font-medium">{r.name}</span>
+                <span className="text-white/40 ml-2">{r.guests} guests</span>
+              </div>
+              <span className="text-white/50">{r.date} - {r.time}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

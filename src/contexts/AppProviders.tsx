@@ -4,6 +4,8 @@ import { AuthProvider } from './AuthContext';
 import { ToastProvider } from './ToastContext';
 import { AdminAuthProvider } from './AdminAuthContext';
 import { ProductsProvider } from './ProductsContext';
+import { OrdersProvider } from './OrdersContext';
+import { ReservationsProvider } from './ReservationsContext';
 import { CoinsProvider } from './CoinsContext';
 import { FavoritesProvider } from './FavoritesContext';
 import { CartProvider } from './CartContext';
@@ -15,11 +17,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <AuthProvider>
           <AdminAuthProvider>
             <ProductsProvider>
-              <CoinsProvider>
-                <FavoritesProvider>
-                  <CartProvider>{children}</CartProvider>
-                </FavoritesProvider>
-              </CoinsProvider>
+              <OrdersProvider>
+                <ReservationsProvider>
+                  <CoinsProvider>
+                    <FavoritesProvider>
+                      <CartProvider>{children}</CartProvider>
+                    </FavoritesProvider>
+                  </CoinsProvider>
+                </ReservationsProvider>
+              </OrdersProvider>
             </ProductsProvider>
           </AdminAuthProvider>
         </AuthProvider>

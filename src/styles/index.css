@@ -81,3 +81,22 @@
 
 .animate-float-soft { animation: float-soft 4s ease-in-out infinite; }
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+
+@keyframes ember-rise {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(-120vh) scale(0.3); opacity: 0; }
+}
+@keyframes smoke-rise {
+  0% { transform: translateY(0) scale(1); opacity: 0.25; }
+  100% { transform: translateY(-80vh) scale(2.5); opacity: 0; }
+}
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 95, 15, 0.3); }
+  50% { box-shadow: 0 0 50px rgba(255, 95, 15, 0.7); }
+}
+.animate-glow { animation: glow-pulse 3s ease-in-out infinite; }
