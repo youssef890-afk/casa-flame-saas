@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /cart
+
+Sitemap: https://casa-flame-saas.vercel.app/sitemap.xml

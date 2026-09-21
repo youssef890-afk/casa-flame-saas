@@ -1,0 +1,18 @@
+{
+  "name": "emynfc Restaurant",
+  "short_name": "emynfc",
+  "description": "Order online from emynfc - Modern Moroccan restaurant",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#ff5f0f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/flame.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
