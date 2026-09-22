@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Menu as MenuIcon, ShoppingBag, User, X, ArrowLeft, Flame } from 'lucide-react';
+import { Menu as MenuIcon, ShoppingBag, User, X, ArrowLeft, Flame, Shield, FileText } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { cn } from '../../lib/utils';
 import { DEMO_RESTAURANT } from '../../services/demoData';
@@ -54,7 +54,6 @@ export function Navbar() {
             {isHome ? <MenuIcon className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
           </button>
 
-          {/* PREMIUM LOGO */}
           <Link to="/" className="flex items-center gap-3 sm:gap-4 shrink-0 group">
             <div className="relative">
               <div className="absolute inset-0 rounded-2xl bg-flame-gradient blur-lg opacity-60 group-hover:opacity-100 transition-opacity" />
@@ -81,15 +80,25 @@ export function Navbar() {
                 className={({ isActive }) =>
                   cn(
                     'px-4 py-2 rounded-xl text-sm font-medium transition',
-                    isActive
-                      ? 'text-white bg-white/5'
-                      : 'text-white/70 hover:text-white hover:bg-white/5'
+                    isActive ? 'text-white bg-white/5' : 'text-white/70 hover:text-white hover:bg-white/5'
                   )
                 }
               >
                 {l.label}
               </NavLink>
             ))}
+            <NavLink
+              to="/protocol"
+              className={({ isActive }) =>
+                cn(
+                  'px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2',
+                  isActive ? 'text-white bg-white/5' : 'text-white/70 hover:text-white hover:bg-white/5'
+                )
+              }
+            >
+              <FileText className="w-4 h-4" />
+              Protocol
+            </NavLink>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -114,6 +123,14 @@ export function Navbar() {
               )}
             </Link>
 
+            <Link
+              to="/admin/login"
+              className="hidden md:inline-flex items-center gap-2 h-10 px-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-white/80 text-sm font-semibold"
+            >
+              <Shield className="w-4 h-4 text-ember-400" />
+              Admin
+            </Link>
+
             <button
               onClick={() => setMobile(true)}
               className="hidden md:inline-flex p-2.5 rounded-2xl hover:bg-white/5 transition text-white/80"
@@ -131,7 +148,7 @@ export function Navbar() {
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setMobile(false)}
           />
-          <div className="absolute left-0 top-0 bottom-0 w-80 max-w-[85%] bg-charcoal-900 p-6 flex flex-col border-r border-white/10">
+          <div className="absolute left-0 top-0 bottom-0 w-80 max-w-[85%] bg-charcoal-900 p-6 flex flex-col border-r border-white/10 overflow-y-auto">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-flame-gradient flex items-center justify-center border-2 border-white/20 shadow-lg">
@@ -161,15 +178,26 @@ export function Navbar() {
                   className={({ isActive }) =>
                     cn(
                       'px-4 py-3 rounded-2xl text-base font-medium transition',
-                      isActive
-                        ? 'bg-flame-gradient text-white'
-                        : 'text-white/80 hover:bg-white/5'
+                      isActive ? 'bg-flame-gradient text-white' : 'text-white/80 hover:bg-white/5'
                     )
                   }
                 >
                   {l.label}
                 </NavLink>
               ))}
+              <NavLink
+                to="/protocol"
+                onClick={() => setMobile(false)}
+                className={({ isActive }) =>
+                  cn(
+                    'px-4 py-3 rounded-2xl text-base font-medium transition flex items-center gap-3',
+                    isActive ? 'bg-flame-gradient text-white' : 'text-white/80 hover:bg-white/5'
+                  )
+                }
+              >
+                <FileText className="w-4 h-4" />
+                Protocol
+              </NavLink>
               <NavLink
                 to="/account"
                 onClick={() => setMobile(false)}
@@ -185,6 +213,24 @@ export function Navbar() {
                 Cart ({count})
               </NavLink>
             </nav>
+
+            {/* Admin section */}
+            <div className="mt-6 pt-6 border-t border-white/10">
+              <p className="text-xs text-white/40 uppercase tracking-widest mb-3">Restaurant Owner</p>
+              <Link
+                to="/admin/login"
+                onClick={() => setMobile(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-ember-500/10 border border-ember-500/30 text-white hover:bg-ember-500/20 transition"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-flame-gradient flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-sm">Admin Login</p>
+                  <p className="text-[10px] text-white/50">Manage your restaurant</p>
+                </div>
+              </Link>
+            </div>
           </div>
         </div>
       )}
