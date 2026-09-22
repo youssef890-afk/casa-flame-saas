@@ -11,92 +11,57 @@
       radial-gradient(900px 500px at 100% 0%, rgba(200,29,49,0.08), transparent 60%);
     background-attachment: fixed;
   }
+  [dir='rtl'] body { @apply font-cairo; }
+  ::selection { @apply bg-ember-500/40; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #0a0a0f; }
+  ::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a45; }
 }
 
 @layer components {
   .container-app { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
+  .glass { @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-glass; }
+  .glass-strong { @apply bg-charcoal-900/70 backdrop-blur-2xl border border-white/10 shadow-glass; }
+  .card-surface { @apply rounded-3xl bg-charcoal-900/60 border border-white/5 backdrop-blur-lg shadow-soft; }
   .gradient-text {
     @apply bg-gradient-to-r from-ember-400 via-ember-500 to-crimson-500 bg-clip-text text-transparent;
   }
   .heading-xl { @apply text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight; }
   .heading-lg { @apply text-3xl sm:text-4xl font-bold tracking-tight; }
+  .heading-md { @apply text-2xl sm:text-3xl font-bold tracking-tight; }
 }
 
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0) }
-  50% { transform: translateY(-12px) }
-}
-@keyframes smoke {
-  0% { transform: translateY(0) scale(1); opacity: 0.5 }
-  50% { transform: translateY(-40px) scale(1.5); opacity: 0.15 }
-  100% { transform: translateY(-80px) scale(2); opacity: 0 }
-}
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(255, 95, 15, 0.3) }
-  50% { box-shadow: 0 0 60px rgba(255, 95, 15, 0.7) }
-}
-@keyframes ember {
-  0% { transform: translateY(0) scale(1); opacity: 0 }
-  20% { opacity: 1 }
-  100% { transform: translateY(-200px) scale(0); opacity: 0 }
-}
-@keyframes shimmer {
-  0% { background-position: -200% center }
-  100% { background-position: 200% center }
-}
-
-.animate-float { animation: float-slow 6s ease-in-out infinite; }
-.animate-glow { animation: glow-pulse 3s ease-in-out infinite; }
-.ember { position: absolute; border-radius: 9999px; background: radial-gradient(circle, #ff5f0f, transparent); pointer-events: none; }
-
-.shimmer-text {
-  background: linear-gradient(90deg, #fff 0%, #ff5f0f 50%, #fff 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 4s linear infinite;
-}
-
+/* === ANIMATIONS (خفيفة) === */
 @keyframes ember-rise {
-  0% { transform: translateY(0) scale(1); opacity: 0; }
-  10% { opacity: 1; }
-  100% { transform: translateY(-120vh) scale(0.3); opacity: 0; }
-}
-
-@keyframes smoke-rise {
-  0% { transform: translateY(0) scale(1); opacity: 0.25; }
-  100% { transform: translateY(-80vh) scale(2.5); opacity: 0; }
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  10% { opacity: 0.8; }
+  100% { transform: translate3d(0, -600px, 0); opacity: 0; }
 }
 
 @keyframes float-soft {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -8px, 0); }
 }
 
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.animate-float-soft { animation: float-soft 4s ease-in-out infinite; }
-.animate-spin-slow { animation: spin-slow 20s linear infinite; }
-
-@keyframes ember-rise {
-  0% { transform: translateY(0) scale(1); opacity: 0; }
-  10% { opacity: 1; }
-  100% { transform: translateY(-120vh) scale(0.3); opacity: 0; }
-}
-@keyframes smoke-rise {
-  0% { transform: translateY(0) scale(1); opacity: 0.25; }
-  100% { transform: translateY(-80vh) scale(2.5); opacity: 0; }
-}
-@keyframes float-soft {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
-}
 @keyframes glow-pulse {
   0%, 100% { box-shadow: 0 0 20px rgba(255, 95, 15, 0.3); }
-  50% { box-shadow: 0 0 50px rgba(255, 95, 15, 0.7); }
+  50% { box-shadow: 0 0 35px rgba(255, 95, 15, 0.5); }
 }
-.animate-glow { animation: glow-pulse 3s ease-in-out infinite; }
+
+.animate-glow { animation: glow-pulse 4s ease-in-out infinite; }
+
+/* === PREFERS REDUCED MOTION === */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === IMAGES (Lazy) === */
+img {
+  content-visibility: auto;
+  contain-intrinsic-size: 300px;
+}

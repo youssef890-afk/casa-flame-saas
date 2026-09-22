@@ -24,6 +24,7 @@ import AdminReservations from './pages/admin/ReservationsPage';
 import AdminCategories from './pages/admin/CategoriesPage';
 import AdminAnalytics from './pages/admin/AnalyticsPage';
 import BackupPage from './pages/admin/BackupPage';
+import ProtocolPage from './pages/admin/ProtocolPage';
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/protocol" element={<ProtocolPage />} />
 
       <Route path="/admin" element={<ProtectedAdmin><AdminLayout /></ProtectedAdmin>}>
         <Route index element={<AdminDashboard />} />

@@ -14,33 +14,24 @@ export default function HomePage() {
     <div>
       <section className="relative min-h-screen flex items-center overflow-hidden">
         <div className="absolute inset-0">
-          <img src={DEMO_RESTAURANT.heroImage} alt="" className="w-full h-full object-cover" />
+          <img
+            src={DEMO_RESTAURANT.heroImage}
+            alt="Restaurant ambiance"
+            className="w-full h-full object-cover"
+            fetchPriority="high"
+          />
           <div className="absolute inset-0 bg-gradient-to-b from-charcoal-950/85 via-charcoal-950/75 to-charcoal-950" />
         </div>
 
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[8, 22, 38, 55, 68, 82, 92].map((left, i) => (
+          {[15, 40, 65, 90].map((left, i) => (
             <span
               key={'e' + i}
-              className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-ember-400"
+              className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-ember-400 will-change-transform"
               style={{
                 left: left + '%',
-                animation: 'ember-rise ' + (4 + i * 0.5) + 's linear infinite',
-                animationDelay: (i * 0.7) + 's',
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[15, 35, 55, 75].map((left, i) => (
-            <span
-              key={'s' + i}
-              className="absolute bottom-0 w-32 h-32 rounded-full bg-white/5 blur-3xl"
-              style={{
-                left: left + '%',
-                animation: 'smoke-rise ' + (7 + i * 1.5) + 's ease-out infinite',
-                animationDelay: (i * 1.8) + 's',
+                animation: 'ember-rise ' + (5 + i * 0.5) + 's linear infinite',
+                animationDelay: (i * 1.2) + 's',
               }}
             />
           ))}
@@ -51,13 +42,18 @@ export default function HomePage() {
             {showcase.map((p, i) => (
               <div
                 key={p.id}
-                className="w-20 h-20 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-ember-500/50 shadow-2xl"
+                className="w-20 h-20 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-ember-500/50 shadow-2xl will-change-transform"
                 style={{
-                  animation: 'float-soft ' + (4 + i * 0.6) + 's ease-in-out infinite',
-                  animationDelay: (i * 0.4) + 's',
+                  animation: 'float-soft ' + (5 + i * 0.6) + 's ease-in-out infinite',
+                  animationDelay: (i * 0.5) + 's',
                 }}
               >
-                <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                <img
+                  loading="lazy"
+                  src={p.image}
+                  alt={p.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
             ))}
           </div>
@@ -83,7 +79,7 @@ export default function HomePage() {
           <div className="flex flex-wrap justify-center gap-3">
             <Link
               to="/menu"
-              className="px-6 py-4 rounded-2xl bg-flame-gradient text-white font-semibold flex items-center gap-2 animate-glow"
+              className="px-6 py-4 rounded-2xl bg-flame-gradient text-white font-semibold flex items-center gap-2"
             >
               <Flame className="w-5 h-5" />
               View Menu
@@ -98,7 +94,7 @@ export default function HomePage() {
               href={waLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold flex items-center gap-2"
+              className="px-6 py-4 rounded-2xl bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold flex items-center gap-2 transition"
             >
               <MessageCircle className="w-5 h-5" />
               WhatsApp
@@ -111,8 +107,17 @@ export default function HomePage() {
         <h2 className="heading-lg mb-8">Browse by category</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
           {CATEGORIES.map((c) => (
-            <Link key={c.id} to={'/menu/' + c.id} className="relative rounded-3xl overflow-hidden aspect-square border border-white/5">
-              <img src={c.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <Link
+              key={c.id}
+              to={'/menu/' + c.id}
+              className="relative rounded-3xl overflow-hidden aspect-square border border-white/5 hover:border-ember-500/30 transition"
+            >
+              <img
+                loading="lazy"
+                src={c.image}
+                alt={c.name}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal-950 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-4">
                 <p className="font-bold">{c.name}</p>
@@ -134,5 +139,4 @@ export default function HomePage() {
       )}
     </div>
   );
-}	
-
+}
