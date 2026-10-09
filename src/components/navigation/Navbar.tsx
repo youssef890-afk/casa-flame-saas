@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Menu as MenuIcon, ShoppingBag, User, X, ArrowLeft, Flame, Shield, FileText } from 'lucide-react';
+import { Menu as MenuIcon, ShoppingBag, User, X, ArrowLeft, Flame, Shield } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { cn } from '../../lib/utils';
 import { DEMO_RESTAURANT } from '../../services/demoData';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { LANGUAGES } from '../../i18n/config';
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobile, setMobile] = useState(false);
   const { count } = useCart();
+  const { t, locale, setLocale } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
@@ -30,10 +33,15 @@ export function Navbar() {
   }, [mobile]);
 
   const links = [
-    { to: '/', label: 'Home' },
-    { to: '/menu', label: 'Menu' },
-    { to: '/reservations', label: 'Reservations' },
+    { to: '/', label: t('nav.home') },
+    { to: '/menu', label: t('nav.menu') },
   ];
+
+  useEffect(() => {
+    if (location.pathname !== '/' || !location.hash) return;
+    const anchor = location.hash.slice(1);
+    requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth' }));
+  }, [location.pathname, location.hash]);
 
   return (
     <>
@@ -63,7 +71,7 @@ export function Navbar() {
             </div>
             <div className="hidden sm:flex flex-col leading-none">
               <span className="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-white to-ember-300 bg-clip-text text-transparent">
-                emynfc
+                {DEMO_RESTAURANT.name}
               </span>
               <span className="text-[9px] sm:text-[10px] font-medium tracking-[0.2em] text-ember-400/90 mt-1">
                 RESTAURANT
@@ -87,21 +95,15 @@ export function Navbar() {
                 {l.label}
               </NavLink>
             ))}
-            <NavLink
-              to="/protocol"
-              className={({ isActive }) =>
-                cn(
-                  'px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2',
-                  isActive ? 'text-white bg-white/5' : 'text-white/70 hover:text-white hover:bg-white/5'
-                )
-              }
-            >
-              <FileText className="w-4 h-4" />
-              Protocol
-            </NavLink>
+            <Link to="/#about" className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 transition hover:bg-white/5 hover:text-white">{t('nav.about')}</Link>
+            <Link to="/#contact" className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 transition hover:bg-white/5 hover:text-white">{t('nav.contact')}</Link>
           </nav>
 
           <div className="flex items-center gap-2">
+            <label htmlFor="site-language" className="sr-only">Language</label>
+            <select id="site-language" value={locale} onChange={(event) => setLocale(event.target.value as typeof locale)} aria-label="Choose language" className="h-10 max-w-16 sm:max-w-none rounded-xl border border-white/10 bg-charcoal-900/80 px-1 sm:px-2 text-[10px] sm:text-xs text-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ember-400">
+              {LANGUAGES.map((language) => <option key={language.code} value={language.code} className="bg-charcoal-900">{language.nativeLabel}</option>)}
+            </select>
             <Link
               to="/account"
               className="hidden sm:inline-flex p-2.5 rounded-2xl hover:bg-white/5 transition text-white/80"
@@ -128,16 +130,9 @@ export function Navbar() {
               className="hidden md:inline-flex items-center gap-2 h-10 px-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-white/80 text-sm font-semibold"
             >
               <Shield className="w-4 h-4 text-ember-400" />
-              Admin
+              Restaurant Studio
             </Link>
 
-            <button
-              onClick={() => setMobile(true)}
-              className="hidden md:inline-flex p-2.5 rounded-2xl hover:bg-white/5 transition text-white/80"
-              aria-label="Open menu"
-            >
-              <MenuIcon className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </header>
@@ -155,7 +150,7 @@ export function Navbar() {
                   <Flame className="w-5 h-5 text-white" strokeWidth={2.5} />
                 </div>
                 <div className="flex flex-col leading-none">
-                  <span className="font-extrabold tracking-tight">emynfc</span>
+                  <span className="font-extrabold tracking-tight">{DEMO_RESTAURANT.name}</span>
                   <span className="text-[9px] tracking-[0.2em] text-ember-400/90 mt-1">RESTAURANT</span>
                 </div>
               </div>
@@ -185,36 +180,25 @@ export function Navbar() {
                   {l.label}
                 </NavLink>
               ))}
-              <NavLink
-                to="/protocol"
-                onClick={() => setMobile(false)}
-                className={({ isActive }) =>
-                  cn(
-                    'px-4 py-3 rounded-2xl text-base font-medium transition flex items-center gap-3',
-                    isActive ? 'bg-flame-gradient text-white' : 'text-white/80 hover:bg-white/5'
-                  )
-                }
-              >
-                <FileText className="w-4 h-4" />
-                Protocol
-              </NavLink>
+              <Link to="/#about" onClick={() => setMobile(false)} className="px-4 py-3 rounded-2xl text-base font-medium text-white/80 transition hover:bg-white/5">{t('nav.about')}</Link>
+              <Link to="/#contact" onClick={() => setMobile(false)} className="px-4 py-3 rounded-2xl text-base font-medium text-white/80 transition hover:bg-white/5">{t('nav.contact')}</Link>
               <NavLink
                 to="/account"
                 onClick={() => setMobile(false)}
                 className="px-4 py-3 rounded-2xl text-white/80 hover:bg-white/5 transition"
               >
-                Account
+                {t('nav.account')}
               </NavLink>
               <NavLink
                 to="/cart"
                 onClick={() => setMobile(false)}
                 className="px-4 py-3 rounded-2xl text-white/80 hover:bg-white/5 transition"
               >
-                Cart ({count})
+                {t('nav.cart')} ({count})
               </NavLink>
             </nav>
 
-            {/* Admin section */}
+            {/* Restaurant management access */}
             <div className="mt-6 pt-6 border-t border-white/10">
               <p className="text-xs text-white/40 uppercase tracking-widest mb-3">Restaurant Owner</p>
               <Link
@@ -226,8 +210,8 @@ export function Navbar() {
                   <Shield className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-sm">Admin Login</p>
-                  <p className="text-[10px] text-white/50">Manage your restaurant</p>
+                  <p className="font-bold text-sm">Restaurant Studio</p>
+                  <p className="text-[10px] text-white/50">Manage the menu and bookings</p>
                 </div>
               </Link>
             </div>
@@ -237,3 +221,4 @@ export function Navbar() {
     </>
   );
 }
+

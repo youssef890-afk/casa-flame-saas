@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   User, Package, Heart, CalendarClock, Settings, Globe, LogOut, LogIn,
-  Coins, Gamepad2, Gift, ChevronRight, Check
+  ChevronRight, Check
 } from 'lucide-react';
-import { useCoins } from '../../contexts/CoinsContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -16,7 +15,6 @@ type Tab = 'profile' | 'orders' | 'favorites' | 'reservations' | 'settings';
 
 export default function AccountPage() {
   const [tab, setTab] = useState<Tab>('profile');
-  const { coins, rewards } = useCoins();
   const { user, logout } = useAuth();
   const { favorites } = useFavorites();
   const { locale, setLocale, t } = useLanguage();
@@ -32,11 +30,7 @@ export default function AccountPage() {
         <h1 className="text-2xl font-bold mb-3">{t('account.hello')}</h1>
         <p className="text-white/60 mb-8 text-sm">{t('account.signInDesc')}</p>
 
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          <div className="rounded-2xl bg-charcoal-900/60 border border-white/5 p-4">
-            <Coins className="w-5 h-5 text-gold-400 mx-auto mb-2" />
-            <p className="text-[10px] text-white/50">{t('account.coins')}</p>
-          </div>
+        <div className="grid grid-cols-2 gap-3 mb-8">
           <div className="rounded-2xl bg-charcoal-900/60 border border-white/5 p-4">
             <Heart className="w-5 h-5 text-crimson-400 mx-auto mb-2" />
             <p className="text-[10px] text-white/50">{t('account.favorites')}</p>
@@ -80,34 +74,6 @@ export default function AccountPage() {
           <p className="text-sm text-white/50 truncate">{user.email}</p>
         </div>
       </div>
-
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="rounded-3xl bg-gradient-to-br from-ember-500/20 to-crimson-500/10 border border-ember-500/30 p-5">
-          <Coins className="w-6 h-6 text-gold-400 mb-2" />
-          <p className="text-3xl font-bold mb-1">{coins}</p>
-          <p className="text-xs text-white/60">{t('account.coins')}</p>
-        </div>
-        <Link to="/games" className="rounded-3xl bg-charcoal-900/60 border border-white/5 hover:border-ember-500/30 p-5 transition flex flex-col justify-between">
-          <Gamepad2 className="w-6 h-6 text-ember-400 mb-2" />
-          <div>
-            <p className="font-bold text-sm">{t('account.playGames')}</p>
-            <p className="text-[11px] text-white/50">{t('account.earnCoins')}</p>
-          </div>
-        </Link>
-      </div>
-
-      <Link to="/rewards" className="block rounded-3xl bg-charcoal-900/60 border border-white/5 hover:border-gold-500/30 p-5 mb-6 transition">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gold-gradient flex items-center justify-center shrink-0">
-            <Gift className="w-6 h-6 text-charcoal-950" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold">{t('account.redeem')}</p>
-            <p className="text-xs text-white/50 mt-0.5">{t('account.redeemDesc')}</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-white/40" />
-        </div>
-      </Link>
 
       <div className="flex gap-1.5 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
         {TABS.map((tb) => (
@@ -247,3 +213,4 @@ export default function AccountPage() {
     </div>
   );
 }
+

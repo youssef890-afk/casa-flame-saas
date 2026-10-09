@@ -25,17 +25,22 @@ export default function BackupPage() {
   };
 
   const onFile = (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      setMessage({ type: 'err', text: 'Backup file is too large (maximum 10 MB).' });
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
       const res = restoreBackup(text);
       if (res.success) {
-        setMessage({ type: 'ok', text: 'Restored! Reloading...' });
+        setMessage({ type: 'ok', text: 'Backup restored in this browser. Reloading…' });
         setTimeout(() => window.location.reload(), 1500);
       } else {
         setMessage({ type: 'err', text: res.message });
       }
     };
+    reader.onerror = () => setMessage({ type: 'err', text: 'Could not read the selected backup file.' });
     reader.readAsText(file);
   };
 
@@ -68,7 +73,7 @@ export default function BackupPage() {
             <Download className="w-6 h-6 text-white" />
           </div>
           <p className="font-bold mb-1">Download Backup</p>
-          <p className="text-xs text-white/50">Save a file with all your data</p>
+          <p className="text-xs text-white/50">Save the local menu and management data as JSON</p>
         </button>
 
         <button onClick={() => fileRef.current?.click()} className="rounded-3xl bg-charcoal-900/60 border border-white/5 hover:border-emerald-500/30 p-6 text-left transition">
@@ -76,7 +81,7 @@ export default function BackupPage() {
             <Upload className="w-6 h-6 text-emerald-400" />
           </div>
           <p className="font-bold mb-1">Restore</p>
-          <p className="text-xs text-white/50">Load data from a backup file</p>
+          <p className="text-xs text-white/50">Restore a compatible Casa Flame demo backup</p>
         </button>
       </div>
 
@@ -88,11 +93,12 @@ export default function BackupPage() {
       <div className="rounded-3xl bg-charcoal-900/60 border border-white/5 p-5">
         <h3 className="font-bold mb-3">What gets backed up</h3>
         <ul className="space-y-2 text-sm text-white/60">
-          <li>- Products (menu items, prices, images)</li>
-          <li>- Coins & rewards</li>
-          <li>- Admin login credentials</li>
+          <li>- Menu items, categories, prices and images</li>
+          <li>- Orders and reservations stored in this browser</li>
           <li>- Language preference</li>
+          <li>- Manager passwords and sign-in sessions are excluded</li>
         </ul>
+        <p className="mt-4 rounded-xl border border-amber-300/15 bg-amber-300/5 p-3 text-xs leading-5 text-amber-100/70">A backup may contain customer names and phone numbers. Keep the downloaded file private. The WhatsApp button only prepares a note; it does not attach or send the backup data.</p>
       </div>
 
       <input
@@ -103,8 +109,10 @@ export default function BackupPage() {
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (f) onFile(f);
+          e.currentTarget.value = '';
         }}
       />
     </div>
   );
 }
+

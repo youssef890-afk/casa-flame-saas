@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, UtensilsCrossed, Gamepad2, ShoppingBag, User } from 'lucide-react';
+import { Home, UtensilsCrossed, ShoppingBag, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useCart } from '../../contexts/CartContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -11,14 +11,13 @@ export function MobileBottomNav() {
   const items = [
     { to: '/', icon: Home, label: t('nav.home') },
     { to: '/menu', icon: UtensilsCrossed, label: t('nav.menu') },
-    { to: '/games', icon: Gamepad2, label: t('nav.play') },
     { to: '/cart', icon: ShoppingBag, label: t('nav.cart') },
     { to: '/account', icon: User, label: t('nav.account') },
   ];
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-charcoal-900/95 backdrop-blur-xl border-t border-white/10">
-      <div className="grid grid-cols-5">
+      <div className="grid grid-cols-4">
         {items.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
@@ -46,3 +45,4 @@ export function MobileBottomNav() {
     </nav>
   );
 }
+

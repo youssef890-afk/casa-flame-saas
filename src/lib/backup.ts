@@ -9,11 +9,10 @@ export interface BackupData {
 
 const KEYS_TO_BACKUP = [
   'casa_products_v1',
-  'casa_coins_v1',
-  'casa_rewards_v1',
-  'casa_admin_creds',
-  'casa_admin_session',
-  'locale',
+  'casa_categories_v1',
+  'casa_orders_v1',
+  'casa_reservations_v1',
+  'casa_locale',
 ];
 
 export function createBackup(): BackupData {
@@ -28,7 +27,7 @@ export function createBackup(): BackupData {
   return {
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
-    restaurantName: 'emynfc',
+    restaurantName: 'Casa Flame',
     keys,
   };
 }
@@ -50,10 +49,11 @@ export function downloadBackup() {
 export function restoreBackup(jsonText: string): { success: boolean; message: string } {
   try {
     const data = JSON.parse(jsonText) as BackupData;
-    if (!data.version || !data.keys) {
+    if (data.version !== BACKUP_VERSION || !data.keys || typeof data.keys !== 'object') {
       return { success: false, message: 'Invalid backup file' };
     }
     for (const [k, v] of Object.entries(data.keys)) {
+      if (!KEYS_TO_BACKUP.includes(k) || (v !== null && typeof v !== 'string')) continue;
       try {
         if (v === null) localStorage.removeItem(k);
         else localStorage.setItem(k, v);
@@ -66,9 +66,8 @@ export function restoreBackup(jsonText: string): { success: boolean; message: st
 }
 
 export function shareBackupOnWhatsApp() {
-  const data = createBackup();
-  const text = 'Casa Flame Backup (' + data.exportedAt + ')\n\n' + JSON.stringify(data);
-  const url = 'https://wa.me/?text=' + encodeURIComponent(text.slice(0, 2000));
+  const text = 'Casa Flame local demo backup. Attach the downloaded JSON file yourself if you choose to share it. This message does not include backup data.';
+  const url = 'https://wa.me/?text=' + encodeURIComponent(text);
   window.open(url, '_blank');
 }
 
@@ -98,3 +97,4 @@ export function getLastBackupDate(): string | null {
     return null;
   }
 }
+
