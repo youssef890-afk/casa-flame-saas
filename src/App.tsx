@@ -9,11 +9,7 @@ import CartPage from './pages/customer/CartPage';
 import CheckoutPage from './pages/customer/CheckoutPage';
 import ReservationsPage from './pages/customer/ReservationsPage';
 import AccountPage from './pages/customer/AccountPage';
-import GamesPage from './pages/customer/GamesPage';
-import RewardsPage from './pages/customer/RewardsPage';
-import MemoryGame from './pages/customer/games/MemoryGame';
-import QuickTap from './pages/customer/games/QuickTap';
-import ComingSoon from './pages/customer/games/ComingSoon';
+import NotFoundPage from './pages/customer/NotFoundPage';
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
 import AdminLogin from './pages/admin/AdminLogin';
@@ -24,7 +20,6 @@ import AdminReservations from './pages/admin/ReservationsPage';
 import AdminCategories from './pages/admin/CategoriesPage';
 import AdminAnalytics from './pages/admin/AnalyticsPage';
 import BackupPage from './pages/admin/BackupPage';
-import ProtocolPage from './pages/admin/ProtocolPage';
 
 export default function App() {
   return (
@@ -32,7 +27,6 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/protocol" element={<ProtocolPage />} />
 
       <Route path="/admin" element={<ProtectedAdmin><AdminLayout /></ProtectedAdmin>}>
         <Route index element={<AdminDashboard />} />
@@ -53,12 +47,9 @@ export default function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/reservations" element={<ReservationsPage />} />
         <Route path="/account" element={<AccountPage />} />
-        <Route path="/games" element={<GamesPage />} />
-        <Route path="/games/memory" element={<MemoryGame />} />
-        <Route path="/games/reflex" element={<QuickTap />} />
-        <Route path="/games/:id" element={<ComingSoon />} />
-        <Route path="/rewards" element={<RewardsPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );
 }
+

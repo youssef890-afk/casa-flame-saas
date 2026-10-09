@@ -29,7 +29,7 @@ export default function SignupPage() {
           <div className="w-16 h-16 rounded-3xl bg-flame-gradient flex items-center justify-center shadow-glow" />
         </div>
         <h1 className="text-2xl font-bold text-center mb-2">Create account</h1>
-        <p className="text-white/50 text-center mb-8 text-sm">Start earning coins and rewards</p>
+        <p className="text-white/50 text-center mb-8 text-sm">Create an account to save your details and make future visits easier.</p>
 
         <form onSubmit={submit} className="space-y-4">
           <div>
@@ -91,3 +91,4 @@ export default function SignupPage() {
     </div>
   );
 }
+
