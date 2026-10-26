@@ -1,224 +1,246 @@
-import { useEffect, useState } from 'react';
-import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Menu as MenuIcon, ShoppingBag, User, X, ArrowLeft, Flame, Shield } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Menu as MenuIcon, ShoppingBag, UserRound, X } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useAdminAuth } from '../../contexts/AdminAuthContext';
 import { cn } from '../../lib/utils';
 import { DEMO_RESTAURANT } from '../../services/demoData';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { LANGUAGES } from '../../i18n/config';
+
+const labels = {
+  en: {
+    home: 'Home', menu: 'Menu', reservations: 'Reservations', account: 'Account', cart: 'Cart',
+    admin: 'Admin', close: 'Close menu', open: 'Open menu', additional: 'More pages',
+    terms: 'Terms of use', about: 'About us', privacy: 'Privacy policy', contact: 'Contact us',
+    inquiry: 'Inquiry', language: 'Language',
+  },
+  fr: {
+    home: 'Accueil', menu: 'Menu', reservations: 'Réservations', account: 'Compte', cart: 'Panier',
+    admin: 'Admin', close: 'Fermer le menu', open: 'Ouvrir le menu', additional: 'Pages supplémentaires',
+    terms: 'Conditions d’utilisation', about: 'À propos', privacy: 'Confidentialité', contact: 'Contact',
+    inquiry: 'Question', language: 'Langue',
+  },
+  ar: {
+    home: 'الرئيسية', menu: 'القائمة', reservations: 'الحجوزات', account: 'حسابي', cart: 'السلة',
+    admin: 'الإدارة', close: 'إغلاق القائمة', open: 'فتح القائمة', additional: 'المزيد من الصفحات',
+    terms: 'اتفاقية الاستخدام', about: 'من نحن', privacy: 'سياسة الاستخدام والخصوصية',
+    contact: 'اتصل بنا', inquiry: 'استفسار', language: 'اللغة',
+  },
+};
+
+const languageNames = { ar: 'العربية', fr: 'Français', en: 'English' };
 
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [mobile, setMobile] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [wideLayout, setWideLayout] = useState(() => window.matchMedia('(min-width: 1024px)').matches);
+  const menuRootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const { count } = useCart();
-  const { t, locale, setLocale } = useLanguage();
-  const navigate = useNavigate();
+  const { isAdmin } = useAdminAuth();
+  const { locale, dir, setLocale } = useLanguage();
   const location = useLocation();
-  const isHome = location.pathname === '/';
+  const text = labels[locale];
+
+  useEffect(() => setMobile(false), [location.pathname, location.search]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    onScroll();
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
+    const updateScroll = () => setScrolled(window.scrollY > 8);
+    updateScroll();
+    window.addEventListener('scroll', updateScroll, { passive: true });
+    return () => window.removeEventListener('scroll', updateScroll);
   }, []);
 
   useEffect(() => {
-    setMobile(false);
-  }, [location.pathname]);
+    const media = window.matchMedia('(min-width: 1024px)');
+    const updateLayout = () => setWideLayout(media.matches);
+    media.addEventListener('change', updateLayout);
+    return () => media.removeEventListener('change', updateLayout);
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = mobile ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [mobile]);
 
-  const links = [
-    { to: '/', label: t('nav.home') },
-    { to: '/menu', label: t('nav.menu') },
+  useEffect(() => {
+    if (!mobile) return;
+
+    const getVisibleItems = () => [...(menuRootRef.current?.querySelectorAll<HTMLElement>(
+      '#additional-navigation a[href], #additional-navigation button:not(:disabled)'
+    ) ?? [])].filter((element) => element.getClientRects().length > 0);
+
+    const focusFrame = window.requestAnimationFrame(() => getVisibleItems()[0]?.focus());
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!menuRootRef.current?.contains(event.target as Node)) setMobile(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setMobile(false);
+        triggerRef.current?.focus();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      if (wideLayout) return;
+      const items = getVisibleItems();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobile, wideLayout]);
+
+  const mainLinks = [
+    { to: '/', label: text.home, end: true },
+    { to: '/menu', label: text.menu },
+    { to: '/reservations', label: text.reservations },
+  ];
+  const additionalLinks = [
+    { to: '/terms', label: text.terms },
+    { to: '/about', label: text.about },
+    { to: '/privacy', label: text.privacy },
+    { to: '/contact', label: text.contact },
+    { to: '/inquiry', label: text.inquiry },
   ];
 
-  useEffect(() => {
-    if (location.pathname !== '/' || !location.hash) return;
-    const anchor = location.hash.slice(1);
-    requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth' }));
-  }, [location.pathname, location.hash]);
+  const languageSwitch = (
+    <div className="flex items-center gap-1 rounded-xl border border-white/15 bg-white/5 p-1" aria-label={text.language}>
+      {(['ar', 'fr', 'en'] as const).map((language) => (
+        <button
+          key={language}
+          type="button"
+          onClick={() => setLocale(language)}
+          lang={language}
+          aria-pressed={locale === language}
+          className={cn(
+            'rounded-lg px-2 py-1 text-[11px] font-semibold sm:text-xs',
+            locale === language ? 'bg-ember-600 text-white' : 'text-white/80 hover:bg-white/10'
+          )}
+        >
+          {languageNames[language]}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
-    <>
-      <header
-        className={cn(
-          'fixed top-0 inset-x-0 z-50 transition-all duration-300',
-          scrolled || !isHome
-            ? 'bg-charcoal-950/95 backdrop-blur-xl border-b border-white/10'
-            : 'bg-gradient-to-b from-charcoal-950/80 to-transparent'
-        )}
-      >
-        <div className="container-app flex items-center justify-between h-16 sm:h-20 gap-3">
-          <button
-            onClick={() => (isHome ? setMobile(true) : navigate(-1))}
-            className="md:hidden p-2.5 rounded-2xl bg-white/5 border border-white/10 text-white shrink-0"
-            aria-label="Navigation"
-          >
-            {isHome ? <MenuIcon className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
-          </button>
+    <div ref={menuRootRef} dir={dir} className={cn(
+      'sticky top-0 z-50 border-b border-white/10 text-white shadow-[0_8px_24px_rgba(0,0,0,.18)] backdrop-blur-xl transition-colors duration-200',
+      scrolled ? 'bg-charcoal-950/95' : 'bg-charcoal-950/90'
+    )}>
+      <header>
+        <div className="container-app flex h-16 items-center justify-between gap-2 sm:h-20 sm:gap-4">
+          <div className="flex shrink-0 items-center gap-2">
+            <Link to="/" className="flex shrink-0 items-center" aria-label={DEMO_RESTAURANT.name}>
+              <img src="/happy-eating-logo.png" alt={DEMO_RESTAURANT.name} width="48" height="56" className="h-12 w-auto object-contain sm:h-14" />
+            </Link>
+            <button
+              ref={triggerRef}
+              type="button"
+              onClick={() => setMobile((open) => !open)}
+              aria-label={mobile ? text.close : text.open}
+              aria-expanded={mobile}
+              aria-controls="additional-navigation"
+              className="rounded-xl p-2 text-white/90 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ember-300"
+            >
+              {mobile ? <X className="h-5 w-5" aria-hidden="true" /> : <MenuIcon className="h-5 w-5" aria-hidden="true" />}
+            </button>
+          </div>
 
-          <Link to="/" className="flex items-center gap-3 sm:gap-4 shrink-0 group">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-2xl bg-flame-gradient blur-lg opacity-60 group-hover:opacity-100 transition-opacity" />
-              <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-flame-gradient flex items-center justify-center border-2 border-white/20 shadow-lg">
-                <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow" strokeWidth={2.5} />
-              </div>
-            </div>
-            <div className="hidden sm:flex flex-col leading-none">
-              <span className="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-white to-ember-300 bg-clip-text text-transparent">
-                {DEMO_RESTAURANT.name}
-              </span>
-              <span className="text-[9px] sm:text-[10px] font-medium tracking-[0.2em] text-ember-400/90 mt-1">
-                RESTAURANT
-              </span>
-            </div>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-1">
-            {links.map((l) => (
+          <nav className="hidden items-center gap-2 lg:flex" aria-label="Main navigation">
+            {mainLinks.map((link) => (
               <NavLink
-                key={l.to}
-                to={l.to}
-                end={l.to === '/'}
-                className={({ isActive }) =>
-                  cn(
-                    'px-4 py-2 rounded-xl text-sm font-medium transition',
-                    isActive ? 'text-white bg-white/5' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  )
-                }
+                key={link.to}
+                to={link.to}
+                end={link.end}
+                className={({ isActive }) => cn(
+                  'inline-flex items-center rounded-xl px-3 py-2 text-sm font-medium transition-colors',
+                  isActive ? 'bg-white/15 text-white' : 'text-white/80 hover:bg-white/5 hover:text-white'
+                )}
               >
-                {l.label}
+                {link.label}
               </NavLink>
             ))}
-            <Link to="/#about" className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 transition hover:bg-white/5 hover:text-white">{t('nav.about')}</Link>
-            <Link to="/#contact" className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 transition hover:bg-white/5 hover:text-white">{t('nav.contact')}</Link>
+            {isAdmin && <Link to="/admin" className="rounded-xl px-3 py-2 text-sm font-semibold text-ember-300 hover:bg-white/5">{text.admin}</Link>}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="site-language" className="sr-only">Language</label>
-            <select id="site-language" value={locale} onChange={(event) => setLocale(event.target.value as typeof locale)} aria-label="Choose language" className="h-10 max-w-16 sm:max-w-none rounded-xl border border-white/10 bg-charcoal-900/80 px-1 sm:px-2 text-[10px] sm:text-xs text-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ember-400">
-              {LANGUAGES.map((language) => <option key={language.code} value={language.code} className="bg-charcoal-900">{language.nativeLabel}</option>)}
-            </select>
-            <Link
-              to="/account"
-              className="hidden sm:inline-flex p-2.5 rounded-2xl hover:bg-white/5 transition text-white/80"
-              aria-label="Account"
-            >
-              <User className="w-5 h-5" />
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <div className="hidden sm:block">{languageSwitch}</div>
+            <Link to="/cart" className="relative rounded-xl p-2 text-white/90 hover:bg-white/10" aria-label={`${text.cart}${count ? ` (${count})` : ''}`} title={text.cart}>
+              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+              {count > 0 && <span className="absolute -end-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-flame-gradient px-1 text-[10px] font-bold text-white">{count}</span>}
             </Link>
-
-            <Link
-              to="/cart"
-              className="relative p-2.5 rounded-2xl hover:bg-white/5 transition text-white/80"
-              aria-label="Cart"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              {count > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-flame-gradient text-[10px] font-bold flex items-center justify-center">
-                  {count}
-                </span>
-              )}
+            <Link to="/account" className="rounded-xl p-2 text-white/90 hover:bg-white/10" aria-label={text.account} title={text.account}>
+              <UserRound className="h-5 w-5" aria-hidden="true" />
             </Link>
-
-            <Link
-              to="/admin/login"
-              className="hidden md:inline-flex items-center gap-2 h-10 px-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-white/80 text-sm font-semibold"
-            >
-              <Shield className="w-4 h-4 text-ember-400" />
-              Restaurant Studio
-            </Link>
-
           </div>
         </div>
       </header>
 
       {mobile && (
-        <div className="fixed inset-0 z-[999] md:hidden">
+        <div
+          className="fixed inset-0 z-[60] bg-black/70 lg:absolute lg:inset-x-0 lg:top-full lg:h-0 lg:bg-transparent"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setMobile(false);
+          }}
+        >
           <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={() => setMobile(false)}
-          />
-          <div className="absolute left-0 top-0 bottom-0 w-80 max-w-[85%] bg-charcoal-900 p-6 flex flex-col border-r border-white/10 overflow-y-auto">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-flame-gradient flex items-center justify-center border-2 border-white/20 shadow-lg">
-                  <Flame className="w-5 h-5 text-white" strokeWidth={2.5} />
-                </div>
-                <div className="flex flex-col leading-none">
-                  <span className="font-extrabold tracking-tight">{DEMO_RESTAURANT.name}</span>
-                  <span className="text-[9px] tracking-[0.2em] text-ember-400/90 mt-1">RESTAURANT</span>
-                </div>
-              </div>
-              <button
-                onClick={() => setMobile(false)}
-                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <nav className="flex flex-col gap-1">
-              {links.map((l) => (
+            id="additional-navigation"
+            role={wideLayout ? undefined : 'dialog'}
+            aria-modal={wideLayout ? undefined : true}
+            aria-label={text.additional}
+            className="menu-panel absolute inset-y-0 start-0 flex w-80 max-w-[88vw] flex-col gap-2 overflow-y-auto border-e border-white/10 bg-charcoal-900 p-6 shadow-2xl lg:absolute lg:inset-y-auto lg:start-4 lg:top-2 lg:max-w-[calc(100vw-2rem)] lg:rounded-2xl lg:border lg:border-white/10"
+          >
+            <nav aria-label="Main navigation" className="flex flex-col gap-2 lg:hidden">
+              {mainLinks.map((link) => (
                 <NavLink
-                  key={l.to}
-                  to={l.to}
-                  end={l.to === '/'}
-                  onClick={() => setMobile(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      'px-4 py-3 rounded-2xl text-base font-medium transition',
-                      isActive ? 'bg-flame-gradient text-white' : 'text-white/80 hover:bg-white/5'
-                    )
-                  }
+                  key={link.to}
+                  to={link.to}
+                  end={link.end}
+                  className={({ isActive }) => cn(
+                    'rounded-xl px-4 py-3 font-medium transition-colors',
+                    isActive ? 'bg-white/15 text-white' : 'text-white/85 hover:bg-white/10'
+                  )}
                 >
-                  {l.label}
+                  {link.label}
                 </NavLink>
               ))}
-              <Link to="/#about" onClick={() => setMobile(false)} className="px-4 py-3 rounded-2xl text-base font-medium text-white/80 transition hover:bg-white/5">{t('nav.about')}</Link>
-              <Link to="/#contact" onClick={() => setMobile(false)} className="px-4 py-3 rounded-2xl text-base font-medium text-white/80 transition hover:bg-white/5">{t('nav.contact')}</Link>
-              <NavLink
-                to="/account"
-                onClick={() => setMobile(false)}
-                className="px-4 py-3 rounded-2xl text-white/80 hover:bg-white/5 transition"
-              >
-                {t('nav.account')}
-              </NavLink>
-              <NavLink
-                to="/cart"
-                onClick={() => setMobile(false)}
-                className="px-4 py-3 rounded-2xl text-white/80 hover:bg-white/5 transition"
-              >
-                {t('nav.cart')} ({count})
-              </NavLink>
             </nav>
-
-            {/* Restaurant management access */}
-            <div className="mt-6 pt-6 border-t border-white/10">
-              <p className="text-xs text-white/40 uppercase tracking-widest mb-3">Restaurant Owner</p>
-              <Link
-                to="/admin/login"
-                onClick={() => setMobile(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-ember-500/10 border border-ember-500/30 text-white hover:bg-ember-500/20 transition"
-              >
-                <div className="w-10 h-10 rounded-2xl bg-flame-gradient flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-sm">Restaurant Studio</p>
-                  <p className="text-[10px] text-white/50">Manage the menu and bookings</p>
-                </div>
-              </Link>
-            </div>
+            <hr className="my-2 border-white/10 lg:hidden" />
+            <nav aria-label={text.additional} className="flex flex-col gap-2">
+              {additionalLinks.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) => cn(
+                    'rounded-xl px-4 py-3 font-medium transition-colors',
+                    isActive ? 'bg-ember-600 text-white' : 'text-white/85 hover:bg-white/10'
+                  )}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+              {isAdmin && <Link to="/admin" className="rounded-xl px-4 py-3 font-semibold text-ember-300 hover:bg-white/10">{text.admin}</Link>}
+            </nav>
+            <div className="mt-4 sm:hidden">{languageSwitch}</div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
-

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CATEGORIES } from '../../services/demoData';
 import { useProducts } from '../../contexts/ProductsContext';
 import { ProductCard } from '../../components/product/ProductCard';
@@ -7,8 +7,18 @@ import { cn } from '../../lib/utils';
 
 export default function MenuPage() {
   const { category } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { products } = useProducts();
-  const [active, setActive] = useState(category || 'all');
+  const queryCategory = searchParams.get('category');
+  const [active, setActive] = useState(category || queryCategory || 'all');
+
+  useEffect(() => setActive(category || queryCategory || 'all'), [category, queryCategory]);
+
+  const chooseCategory = (id: string) => {
+    setActive(id);
+    navigate(id === 'all' ? '/menu' : `/menu?category=${encodeURIComponent(id)}`, { replace: true });
+  };
 
   const filtered = active === 'all' ? products : products.filter(p => p.categoryId === active);
 
@@ -22,7 +32,7 @@ export default function MenuPage() {
       <div className="sticky top-16 sm:top-20 z-20 -mx-4 px-4 py-4 bg-charcoal-950/95 backdrop-blur-xl border-y border-white/5 mb-8">
         <div className="flex gap-2 overflow-x-auto pb-1">
           <button
-            onClick={() => setActive('all')}
+            onClick={() => chooseCategory('all')}
             className={cn(
               'shrink-0 px-4 py-2.5 rounded-2xl text-sm font-medium border transition',
               active === 'all' ? 'bg-flame-gradient text-white border-transparent shadow-glow' : 'bg-white/5 border-white/10 text-white/70'
@@ -33,7 +43,7 @@ export default function MenuPage() {
           {CATEGORIES.map(c => (
             <button
               key={c.id}
-              onClick={() => setActive(c.id)}
+              onClick={() => chooseCategory(c.id)}
               className={cn(
                 'shrink-0 px-4 py-2.5 rounded-2xl text-sm font-medium border transition',
                 active === c.id ? 'bg-flame-gradient text-white border-transparent shadow-glow' : 'bg-white/5 border-white/10 text-white/70'

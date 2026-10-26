@@ -18,7 +18,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       const saved = localStorage.getItem(KEY) as Locale | null;
       if (saved && ['en', 'fr', 'ar'].includes(saved)) return saved;
     } catch {}
-    return 'en';
+    return 'ar';
   });
 
   const dir: 'ltr' | 'rtl' = locale === 'ar' ? 'rtl' : 'ltr';

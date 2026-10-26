@@ -15,6 +15,7 @@ type Tab = 'profile' | 'orders' | 'favorites' | 'reservations' | 'settings';
 
 export default function AccountPage() {
   const [tab, setTab] = useState<Tab>('profile');
+  const [authError, setAuthError] = useState('');
   const { user, logout } = useAuth();
   const { favorites } = useFavorites();
   const { locale, setLocale, t } = useLanguage();
@@ -200,12 +201,18 @@ export default function AccountPage() {
 
             <div className="pt-4 border-t border-white/10">
               <button
-                onClick={() => { logout(); navigate('/'); }}
+                onClick={async () => {
+                  setAuthError('');
+                  const result = await logout();
+                  if (result.ok) navigate('/');
+                  else setAuthError(result.error || 'Could not sign out.');
+                }}
                 className="w-full h-12 rounded-2xl bg-crimson-500/10 border border-crimson-500/25 text-crimson-400 font-semibold flex items-center justify-center gap-2 transition"
               >
                 <LogOut className="w-4 h-4" />
                 {t('action.signOut')}
               </button>
+              {authError && <p role="alert" className="mt-3 text-center text-sm text-crimson-300">{authError}</p>}
             </div>
           </div>
         )}
@@ -213,4 +220,3 @@ export default function AccountPage() {
     </div>
   );
 }
-

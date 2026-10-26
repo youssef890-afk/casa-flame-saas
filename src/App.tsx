@@ -3,13 +3,14 @@ import CustomerLayout from './layouts/CustomerLayout';
 import AdminLayout from './layouts/AdminLayout';
 import { ProtectedAdmin } from './components/ProtectedAdmin';
 import HomePage from './pages/customer/HomePage';
+import AboutPage from './pages/customer/AboutPage';
+import ContactPage from './pages/customer/ContactPage';
 import MenuPage from './pages/customer/MenuPage';
 import ProductPage from './pages/customer/ProductPage';
 import CartPage from './pages/customer/CartPage';
 import CheckoutPage from './pages/customer/CheckoutPage';
 import ReservationsPage from './pages/customer/ReservationsPage';
 import AccountPage from './pages/customer/AccountPage';
-import NotFoundPage from './pages/customer/NotFoundPage';
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
 import AdminLogin from './pages/admin/AdminLogin';
@@ -20,6 +21,7 @@ import AdminReservations from './pages/admin/ReservationsPage';
 import AdminCategories from './pages/admin/CategoriesPage';
 import AdminAnalytics from './pages/admin/AnalyticsPage';
 import BackupPage from './pages/admin/BackupPage';
+import ProtocolPage from './pages/admin/ProtocolPage';
 
 export default function App() {
   return (
@@ -27,6 +29,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/protocol" element={<ProtocolPage />} />
 
       <Route path="/admin" element={<ProtectedAdmin><AdminLayout /></ProtectedAdmin>}>
         <Route index element={<AdminDashboard />} />
@@ -40,6 +43,8 @@ export default function App() {
 
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/menu/:category" element={<MenuPage />} />
         <Route path="/product/:id" element={<ProductPage />} />
@@ -47,9 +52,7 @@ export default function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/reservations" element={<ReservationsPage />} />
         <Route path="/account" element={<AccountPage />} />
-        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );
 }
-

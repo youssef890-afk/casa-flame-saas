@@ -1,3 +1,5 @@
+import { DEMO_RESTAURANT } from '../services/demoData';
+
 export const BACKUP_VERSION = 'v1';
 
 export interface BackupData {
@@ -9,10 +11,11 @@ export interface BackupData {
 
 const KEYS_TO_BACKUP = [
   'casa_products_v1',
-  'casa_categories_v1',
-  'casa_orders_v1',
-  'casa_reservations_v1',
-  'casa_locale',
+  'casa_coins_v1',
+  'casa_rewards_v1',
+  'casa_admin_creds',
+  'casa_admin_session',
+  'locale',
 ];
 
 export function createBackup(): BackupData {
@@ -27,7 +30,7 @@ export function createBackup(): BackupData {
   return {
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
-    restaurantName: 'Casa Flame',
+    restaurantName: DEMO_RESTAURANT.name,
     keys,
   };
 }
@@ -39,7 +42,7 @@ export function downloadBackup() {
   const date = new Date().toISOString().slice(0, 10);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'casa-flame-backup-' + date + '.json';
+  a.download = 'happy-eating-snack-backup-' + date + '.json';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -49,11 +52,10 @@ export function downloadBackup() {
 export function restoreBackup(jsonText: string): { success: boolean; message: string } {
   try {
     const data = JSON.parse(jsonText) as BackupData;
-    if (data.version !== BACKUP_VERSION || !data.keys || typeof data.keys !== 'object') {
+    if (!data.version || !data.keys) {
       return { success: false, message: 'Invalid backup file' };
     }
     for (const [k, v] of Object.entries(data.keys)) {
-      if (!KEYS_TO_BACKUP.includes(k) || (v !== null && typeof v !== 'string')) continue;
       try {
         if (v === null) localStorage.removeItem(k);
         else localStorage.setItem(k, v);
@@ -66,8 +68,9 @@ export function restoreBackup(jsonText: string): { success: boolean; message: st
 }
 
 export function shareBackupOnWhatsApp() {
-  const text = 'Casa Flame local demo backup. Attach the downloaded JSON file yourself if you choose to share it. This message does not include backup data.';
-  const url = 'https://wa.me/?text=' + encodeURIComponent(text);
+  const data = createBackup();
+  const text = DEMO_RESTAURANT.name + ' Backup (' + data.exportedAt + ')\n\n' + JSON.stringify(data);
+  const url = 'https://wa.me/?text=' + encodeURIComponent(text.slice(0, 2000));
   window.open(url, '_blank');
 }
 
@@ -97,4 +100,3 @@ export function getLastBackupDate(): string | null {
     return null;
   }
 }
-

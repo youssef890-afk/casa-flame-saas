@@ -7,14 +7,23 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = login(email, password);
-    if (res.ok) navigate('/account');
-    else setError(res.error || 'Login failed');
+    setError('');
+    setSubmitting(true);
+    try {
+      const res = await login(email, password);
+      if (res.ok) navigate('/account');
+      else setError(res.error || 'Login failed');
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : 'Could not sign in.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -58,9 +67,9 @@ export default function LoginPage() {
 
           {error && <p className="text-sm text-crimson-400 text-center">{error}</p>}
 
-          <button type="submit" className="w-full h-14 rounded-2xl bg-flame-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-glow">
+          <button type="submit" disabled={submitting} className="w-full h-14 rounded-2xl bg-flame-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-glow disabled:cursor-wait disabled:opacity-60">
             <LogIn className="w-5 h-5" />
-            Sign In
+            {submitting ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
 

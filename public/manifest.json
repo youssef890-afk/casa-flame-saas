@@ -1,20 +1,20 @@
 {
-  "name": "Casa Flame",
-  "short_name": "Casa Flame",
-  "description": "Restaurant - Menu digital, commandes, réservations",
+  "name": "Happy Eating Snack",
+  "short_name": "Happy Eating",
+  "description": "Happy Eating Snack in Agadir",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0A0A0F",
   "theme_color": "#FF5F0F",
-  "lang": "ar",
-  "dir": "rtl",
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     {
-      "src": "/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "/happy-eating-logo.png",
+      "sizes": "273x316",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

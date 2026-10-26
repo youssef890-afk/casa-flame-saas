@@ -1,148 +1,270 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Clock3, Flame, MapPin, MessageCircle, UtensilsCrossed, CalendarDays, Smartphone, Phone } from 'lucide-react';
-import { DEMO_RESTAURANT } from '../../services/demoData';
+import { useReducedMotion, motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight, ChevronDown, MessageCircle, Star } from 'lucide-react';
+import { CATEGORIES, DEMO_RESTAURANT } from '../../services/demoData';
 import { useProducts } from '../../contexts/ProductsContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { ProductCard } from '../../components/product/ProductCard';
+import { ProgressiveImage } from '../../components/ui/ProgressiveImage';
+import { cn } from '../../lib/utils';
+
+function getHeroImageSource(source: string) {
+  try {
+    const imageUrl = new URL(source);
+    if (imageUrl.hostname === 'images.unsplash.com') {
+      imageUrl.searchParams.set('auto', 'format');
+      imageUrl.searchParams.set('fit', 'crop');
+      imageUrl.searchParams.set('w', '1100');
+      imageUrl.searchParams.set('q', '85');
+      imageUrl.searchParams.set('fm', 'webp');
+      return imageUrl.toString();
+    }
+  } catch {
+    return source;
+  }
+  return source;
+}
+
+function isRestaurantOpen(now: Date) {
+  const { open, close, timeZone } = DEMO_RESTAURANT.openingHours;
+  const localTime = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(now);
+  const currentMinutes = Number(localTime.find((part) => part.type === 'hour')?.value) * 60
+    + Number(localTime.find((part) => part.type === 'minute')?.value);
+  const [openHour, openMinute] = open.split(':').map(Number);
+  const [closeHour, closeMinute] = close.split(':').map(Number);
+  const openAt = openHour * 60 + openMinute;
+  const closeAt = closeHour * 60 + closeMinute;
+
+  return openAt < closeAt
+    ? currentMinutes >= openAt && currentMinutes < closeAt
+    : currentMinutes >= openAt || currentMinutes < closeAt;
+}
 
 const copy = {
   en: {
-    demo: 'Portfolio demonstration · sample dishes and business details',
-    eyebrow: 'Casa Flame · Agadir region',
-    headline: 'A table worth\ncoming together for.',
-    intro: 'Fire-led favorites, Moroccan inspiration, and a warm welcome. Explore the menu or send a table request in just a few steps.',
-    menu: 'Explore menu', reserve: 'Request a table', whatsapp: 'WhatsApp the restaurant',
-    menuEyebrow: 'From the kitchen', menuTitle: 'A menu made to explore', menuMore: 'See the full menu',
-    categories: 'Find your next favorite', featured: 'A first look', storyLabel: 'The Casa Flame idea', storyTitle: 'A relaxed place for food made over fire.',
-    story: 'Casa Flame is a restaurant concept for a generous table: familiar favorites, Moroccan-inspired plates, and a warm welcome. This portfolio demo uses sample menu content that can be replaced with the restaurant’s verified recipes and details.',
-    hours: 'Opening hours', location: 'Location', locationNote: 'Address details are for demonstration and must be verified before launch.',
-    contact: 'Come by or get in touch', contactText: 'For a reservation or order inquiry, message the restaurant. Your request is not confirmed until the team replies.',
-    browse: 'Browse the menu', region: 'Agadir region', menuLabel: 'Digital menu', bookingLabel: 'Table requests', mobileLabel: 'Made for mobile', call: 'Call',
+    description: 'Find Happy Eating Snack in Agadir, browse the menu, or get in touch with us.',
+    menu: 'View Menu', reserve: 'Reserve Table', whatsapp: 'WhatsApp',
+    imageFallback: 'Our featured dish',
+    openNow: 'Open now', closedNow: 'Closed now',
+    categories: 'Browse by Category', popular: 'Most ordered', ratings: 'Top-rated dishes',
+    gallery: 'Fresh from our kitchen',
+    dishes: 'dishes', scroll: 'Browse by category',
+    ratingNote: 'Ratings shown are from our current menu data.',
   },
   fr: {
-    demo: 'Démonstration portfolio · plats et informations indicatifs',
-    eyebrow: 'Casa Flame · région d’Agadir',
-    headline: 'Une table qui\nrassemble.',
-    intro: 'Des classiques au feu, une inspiration marocaine et un accueil chaleureux. Découvrez le menu ou demandez une table en quelques étapes.',
-    menu: 'Voir le menu', reserve: 'Demander une table', whatsapp: 'Écrire sur WhatsApp',
-    menuEyebrow: 'À la cuisine', menuTitle: 'Un menu à découvrir', menuMore: 'Voir tout le menu',
-    categories: 'Choisissez selon vos envies', featured: 'Un premier aperçu', storyLabel: 'Le concept Casa Flame', storyTitle: 'Un lieu convivial autour d’une cuisine au feu.',
-    story: 'Casa Flame est un concept de restaurant pour une table généreuse : des classiques appréciés, des plats inspirés du Maroc et un accueil chaleureux. Ce portfolio utilise un menu exemple, à remplacer par les recettes et informations vérifiées du restaurant.',
-    hours: 'Horaires', location: 'Adresse', locationNote: 'Les informations d’adresse sont indicatives et doivent être vérifiées avant lancement.',
-    contact: 'Passez nous voir ou contactez-nous', contactText: 'Pour une réservation ou une demande, contactez le restaurant. La demande n’est confirmée qu’après réponse de l’équipe.',
-    browse: 'Parcourir le menu', region: 'Région d’Agadir', menuLabel: 'Menu numérique', bookingLabel: 'Demandes de table', mobileLabel: 'Pensé pour mobile', call: 'Appeler',
+    description: 'Retrouvez Happy Eating Snack à Agadir, consultez le menu ou contactez-nous.',
+    menu: 'Voir le menu', reserve: 'Réserver une table', whatsapp: 'WhatsApp',
+    imageFallback: 'Notre plat vedette',
+    openNow: 'Ouvert maintenant', closedNow: 'Fermé maintenant',
+    categories: 'Parcourir par catégorie', popular: 'Les plus commandés', ratings: 'Plats les mieux notés',
+    gallery: 'Tout droit de notre cuisine',
+    dishes: 'plats', scroll: 'Parcourir par catégorie',
+    ratingNote: 'Notes issues des données actuelles de notre menu.',
   },
   ar: {
-    demo: 'عرض تجريبي للأعمال · الأطباق ومعلومات المطعم نموذجية',
-    eyebrow: 'Casa Flame · جهة أكادير',
-    headline: 'مائدة كتجمعنا\nعلى المذاق الزوين.',
-    intro: 'أطباق على النار بلمسة مغربية وترحيب دافئ. اكتشف القائمة أو طلب طاولة فخطوات بسيطة.',
-    menu: 'اكتشف القائمة', reserve: 'اطلب حجز طاولة', whatsapp: 'تواصل عبر واتساب',
-    menuEyebrow: 'من المطبخ', menuTitle: 'قائمة تستاهل الاكتشاف', menuMore: 'شوف القائمة كاملة',
-    categories: 'اختار شنو كيشهيك', featured: 'بداية من القائمة', storyLabel: 'فكرة Casa Flame', storyTitle: 'بلاصة هانية وأطباق كتوجد على النار.',
-    story: 'Casa Flame فكرة مطعم لمائدة عامرة: أطباق محبوبة، لمسات من المطبخ المغربي، وترحيب دافئ. هاد العرض فيه قائمة ومعلومات نموذجية، ويمكن تعويضها بوصفات وتفاصيل المطعم المؤكدة.',
-    hours: 'أوقات العمل', location: 'الموقع', locationNote: 'العنوان المعروض تجريبي وخاصو التأكيد قبل الإطلاق.',
-    contact: 'مرحبا بيك أو تواصل معانا', contactText: 'إلى بغيتي تحجز أو تسول على طلب، راسل المطعم. الطلب ما كيتأكدش حتى يجاوبك الفريق.',
-    browse: 'تصفّح القائمة', region: 'جهة أكادير', menuLabel: 'قائمة رقمية', bookingLabel: 'طلب طاولة', mobileLabel: 'تجربة سهلة فالهاتف', call: 'عيط لينا',
+    description: <>زوروا <bdi dir="ltr">Happy Eating Snack</bdi> في أكادير، تصفحوا القائمة أو تواصلوا معنا.</>,
+    menu: 'تصفح القائمة', reserve: 'احجز طاولة', whatsapp: 'واتساب',
+    imageFallback: 'طبقنا المميز',
+    openNow: 'مفتوح الآن', closedNow: 'مغلق الآن',
+    categories: 'تصفح حسب الفئة', popular: 'الأكثر طلباً', ratings: 'الأطباق الأعلى تقييماً',
+    gallery: 'من مطبخنا مباشرة',
+    dishes: 'أطباق', scroll: 'تصفح حسب الفئة',
+    ratingNote: 'التقييمات المعروضة من بيانات القائمة الحالية.',
   },
 };
 
 export default function HomePage() {
   const { products, categories } = useProducts();
-  const { locale } = useLanguage();
+  const { locale, dir } = useLanguage();
+  const reduceMotion = useReducedMotion();
+  const [heroImageFailed, setHeroImageFailed] = useState(false);
+  const [restaurantOpen, setRestaurantOpen] = useState(() => isRestaurantOpen(new Date()));
   const text = copy[locale];
-  const featured = products.slice(0, 4);
-  const waNumber = DEMO_RESTAURANT.whatsapp.replace(/\D/g, '');
-  const phoneNumber = DEMO_RESTAURANT.phone.replace(/[^+\d]/g, '');
-  const waLink = waNumber.length >= 8 && waNumber.length <= 15
-    ? `https://wa.me/${waNumber}?text=${encodeURIComponent('Hello Casa Flame, I have a question about the menu.')}`
-    : undefined;
+  const featured = products.filter((product) => product.popular).slice(0, 4);
+  const topRated = [...products].sort((a, b) => b.rating - a.rating).slice(0, 3);
+  const heroProduct = products.find((product) => product.categoryId === 'burgers' && product.popular)
+    ?? products.find((product) => product.categoryId === 'burgers')
+    ?? featured[0]
+    ?? topRated[0];
+  const heroImage = getHeroImageSource(heroProduct?.image ?? DEMO_RESTAURANT.heroImage);
+  useEffect(() => setHeroImageFailed(false), [heroProduct?.id, heroImage]);
+  useEffect(() => {
+    const updateOpenState = () => setRestaurantOpen(isRestaurantOpen(new Date()));
+    const interval = window.setInterval(updateOpenState, 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
+  const orderedCategories = [...categories].sort((a, b) => {
+    const popularA = products.filter((product) => product.categoryId === a.id && product.popular).length;
+    const popularB = products.filter((product) => product.categoryId === b.id && product.popular).length;
+    return popularB - popularA || CATEGORIES.findIndex((category) => category.id === a.id) - CATEGORIES.findIndex((category) => category.id === b.id);
+  });
+  const waLink = `https://wa.me/${DEMO_RESTAURANT.whatsapp.replace(/\D/g, '')}`;
+  const reveal = reduceMotion ? {} : { initial: { opacity: 0, y: 18 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.15 } };
 
   return (
-    <div>
-      <section className="relative overflow-hidden border-b border-white/5 bg-charcoal-950">
-        <div className="pointer-events-none absolute -right-40 -top-48 h-[34rem] w-[34rem] rounded-full bg-ember-500/10 blur-[120px]" />
-        <div className="container-app relative grid min-h-0 items-center gap-7 py-4 sm:gap-12 sm:py-20 lg:min-h-[680px] lg:grid-cols-[.9fr_1.1fr] lg:gap-16 lg:py-24">
-          <div className="pointer-events-none absolute inset-x-4 top-6 h-[450px] overflow-hidden rounded-[2rem] border border-white/10 lg:hidden">
-            <img src={DEMO_RESTAURANT.heroImage} alt="" aria-hidden="true" fetchPriority="high" className="h-full w-full object-cover opacity-50" />
-            <div className="absolute inset-0 bg-gradient-to-b from-charcoal-950/30 via-charcoal-950/65 to-charcoal-950" />
-          </div>
-          <div className="relative z-10 order-1 max-w-2xl lg:order-1">
-            <div className="mb-7 inline-flex items-center gap-2.5 rounded-full border border-ember-300/20 bg-ember-300/[0.07] px-4 py-2 text-xs font-medium tracking-wide text-ember-100">
-              <Flame className="h-4 w-4 text-ember-300" /> {text.eyebrow}
+    <div dir={dir}>
+      <section className="relative flex min-h-[90vh] min-h-[90svh] items-center overflow-hidden bg-charcoal-950 pb-14 sm:pb-16">
+        <ProgressiveImage
+          src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1920&q=80"
+          alt=""
+          width="1920"
+          height="1080"
+          loading="eager"
+          decoding="async"
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div aria-hidden="true" className="absolute inset-0 backdrop-blur-sm bg-gradient-to-l from-charcoal-950/95 via-charcoal-950/80 to-charcoal-950/40" />
+
+        <motion.div {...reveal} className="container-app relative grid items-center gap-8 py-14 text-center lg:grid-cols-[1.1fr_.9fr] lg:gap-12 lg:py-20 lg:text-start">
+          <div className="order-2 lg:order-1">
+            <div className="mb-4 flex justify-center lg:justify-start" aria-live="polite">
+              <span className={cn(
+                'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold',
+                restaurantOpen ? 'border-emerald-400/40 bg-emerald-950/70 text-emerald-100' : 'border-white/20 bg-charcoal-950/80 text-white/90'
+              )}>
+                <span className={cn('h-2 w-2 rounded-full', restaurantOpen ? 'animate-pulse bg-emerald-400' : 'bg-white/50')} aria-hidden="true" />
+                {restaurantOpen ? text.openNow : text.closedNow}
+              </span>
             </div>
-            <h1 className="mb-4 whitespace-pre-line text-4xl font-semibold leading-[1.12] tracking-[-0.04em] text-white sm:mb-6 sm:text-6xl lg:text-[4.5rem]">{text.headline}</h1>
-            <p className="mb-5 max-w-lg text-sm leading-6 text-white/65 sm:mb-8 sm:text-lg sm:leading-8">{text.intro}</p>
-            <div className="flex flex-nowrap gap-2 sm:gap-3">
-              <Link to="/menu" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-ember-500 px-3 text-sm font-semibold text-white shadow-lg shadow-ember-950/30 transition hover:-translate-y-0.5 hover:bg-ember-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember-300 sm:min-h-12 sm:gap-2.5 sm:px-5 sm:text-base">
-                <UtensilsCrossed className="h-4 w-4" /> {text.menu} <ArrowUpRight className="h-4 w-4" />
+            <h1 className={cn('font-display mx-auto mb-5 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:mx-0 lg:text-6xl', locale === 'ar' && 'font-cairo')}>
+              {locale === 'ar' ? <>طعام لذيذ، <span className="gradient-text">وأوقات لا تُنسى</span></> : locale === 'fr' ? <>De bons plats, <span className="gradient-text">de beaux moments</span></> : <>Good food, <span className="gradient-text">happy moments</span></>}
+            </h1>
+            <p className="mx-auto mb-8 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg lg:mx-0">
+              {text.description}
+            </p>
+
+            <div dir={dir} className="flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row sm:flex-wrap lg:justify-start">
+              <Link to="/menu" dir={dir} className="hero-cta inline-flex h-[52px] min-h-[52px] w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-flame-gradient px-5 py-0 font-bold text-white sm:w-auto sm:px-6">
+                <bdi>{text.menu}</bdi>
+                {dir === 'rtl' ? <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden="true" /> : <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />}
               </Link>
-              <Link to="/reservations" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-white/15 px-3 text-sm font-semibold text-white/90 transition hover:border-white/30 hover:bg-white/[0.04] sm:min-h-12 sm:px-5 sm:text-base"><CalendarDays className="h-4 w-4 text-ember-300" />{text.reserve}</Link>
-            </div>
-            <p className="mt-6 hidden text-xs leading-5 text-white/40 sm:block">{text.demo}</p>
-            <div className="mt-10 hidden max-w-xl grid-cols-3 border-t border-white/10 pt-6 sm:grid">
-              <div className="pe-3"><UtensilsCrossed className="mb-3 h-4 w-4 text-ember-300" /><p className="text-xs font-medium text-white/75 sm:text-sm">{text.menuLabel}</p></div>
-              <div className="border-s border-white/10 px-4"><CalendarDays className="mb-3 h-4 w-4 text-ember-300" /><p className="text-xs font-medium text-white/75 sm:text-sm">{text.bookingLabel}</p></div>
-              <div className="border-s border-white/10 ps-4"><Smartphone className="mb-3 h-4 w-4 text-ember-300" /><p className="text-xs font-medium text-white/75 sm:text-sm">{text.mobileLabel}</p></div>
-            </div>
-          </div>
-          <div className="relative order-2 hidden min-h-[470px] lg:order-2 lg:block lg:min-h-[560px]">
-            <div className="absolute inset-0 overflow-hidden rounded-[2rem] border border-white/10 bg-charcoal-900 shadow-2xl shadow-black/40">
-              <img src={DEMO_RESTAURANT.heroImage} alt="A warmly lit restaurant dining room" fetchPriority="high" className="h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-charcoal-950/80 via-charcoal-950/5 to-charcoal-950/10" />
-              <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 sm:p-7">
-                <div><p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-ember-200">CASA FLAME</p><p className="text-xl font-semibold text-white sm:text-2xl">{text.region}</p></div>
-                <span className="mb-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur"><ArrowUpRight className="h-5 w-5" /></span>
-              </div>
-            </div>
-            <div className="absolute -bottom-5 -start-3 flex items-center gap-3 rounded-2xl border border-white/10 bg-charcoal-900/95 p-3 shadow-xl sm:-start-6 sm:bottom-8 sm:p-4">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-ember-500/15 text-ember-300"><MapPin className="h-5 w-5" /></span>
-              <div><p className="text-[10px] font-medium uppercase tracking-wider text-white/45">{text.location}</p><p className="mt-1 text-sm font-semibold text-white">{DEMO_RESTAURANT.city}</p></div>
+              <Link to="/reservations" dir={dir} className="hero-cta inline-flex h-[52px] min-h-[52px] w-full shrink-0 items-center justify-center whitespace-nowrap rounded-2xl border border-white/30 bg-charcoal-950/60 px-5 py-0 font-semibold text-white backdrop-blur sm:w-auto sm:px-6">
+                <bdi>{text.reserve}</bdi>
+              </Link>
+              <a href={waLink} target="_blank" rel="noopener noreferrer" dir={dir} className="hero-cta inline-flex h-[52px] min-h-[52px] w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border border-emerald-400/60 bg-charcoal-950/70 px-5 py-0 font-semibold text-white backdrop-blur sm:w-auto sm:px-6">
+                <MessageCircle className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <bdi>{text.whatsapp}</bdi>
+              </a>
             </div>
           </div>
-        </div>
-      </section>
 
-      <section className="container-app py-16 sm:py-20">
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <div><p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-ember-300">{text.menuEyebrow}</p><h2 className="heading-lg">{text.categories}</h2></div>
-          <Link to="/menu" className="hidden items-center gap-1 text-sm font-semibold text-ember-300 hover:text-ember-200 sm:inline-flex">{text.menuMore}<ArrowUpRight className="h-4 w-4" /></Link>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-          {categories.map((category) => <Link key={category.id} to={`/menu/${category.id}`} className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-charcoal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ember-400">
-            <img src={category.image} alt={category.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-            <span className="absolute inset-0 bg-gradient-to-t from-charcoal-950/90 via-charcoal-950/10 to-transparent" />
-            <span className="absolute inset-x-3 bottom-3 font-semibold text-white">{locale === 'ar' ? category.nameAr : locale === 'fr' ? category.nameFr : category.name}</span>
-          </Link>)}
-        </div>
-      </section>
-
-      {featured.length > 0 && <section className="border-y border-white/5 bg-charcoal-900/30 py-16 sm:py-20">
-        <div className="container-app">
-          <div className="mb-8 flex items-end justify-between gap-4"><div><p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-ember-300">{text.menuEyebrow}</p><h2 className="heading-lg">{text.featured}</h2></div><Link to="/menu" className="hidden items-center gap-1 text-sm font-semibold text-ember-300 hover:text-ember-200 sm:inline-flex">{text.menuMore}<ArrowUpRight className="h-4 w-4" /></Link></div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">{featured.map((product) => <ProductCard key={product.id} product={product} />)}</div>
-        </div>
-      </section>}
-
-      <section id="about" className="container-app grid scroll-mt-28 gap-10 py-16 sm:py-24 lg:grid-cols-[1.2fr_.8fr] lg:items-center">
-        <div><p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-ember-300">{text.storyLabel}</p><h2 className="heading-lg mb-5 max-w-xl">{text.storyTitle}</h2><p className="max-w-2xl leading-8 text-white/65">{text.story}</p><Link to="/menu" className="mt-7 inline-flex items-center gap-2 font-semibold text-ember-300 hover:text-ember-200">{text.browse}<ArrowUpRight className="h-4 w-4" /></Link></div>
-        <div id="location" className="grid scroll-mt-28 gap-3 rounded-3xl border border-white/10 bg-charcoal-900/50 p-6 sm:p-8">
-          <div className="flex items-start gap-4 border-b border-white/10 pb-5"><Clock3 className="mt-1 h-5 w-5 shrink-0 text-ember-300" /><div><h3 className="font-semibold">{text.hours}</h3><p className="mt-1 text-sm leading-6 text-white/60">{DEMO_RESTAURANT.hours}</p></div></div>
-          <div className="flex items-start gap-4 pt-2"><MapPin className="mt-1 h-5 w-5 shrink-0 text-ember-300" /><div><h3 className="font-semibold">{text.location}</h3><p className="mt-1 text-sm text-white/60">{DEMO_RESTAURANT.address}</p><p className="mt-1 text-sm text-white/60">{DEMO_RESTAURANT.city}</p><p className="mt-3 text-xs leading-5 text-amber-200/70">{text.locationNote}</p></div></div>
-        </div>
-      </section>
-
-      <section id="contact" className="container-app scroll-mt-28 pb-16">
-        <div className="flex flex-col justify-between gap-6 rounded-3xl border border-ember-400/20 bg-gradient-to-br from-ember-500/10 to-charcoal-900/70 p-7 sm:flex-row sm:items-center sm:p-10">
-          <div><p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-ember-300">{text.region}</p><h2 className="text-2xl font-semibold sm:text-3xl">{text.contact}</h2><p className="mt-3 max-w-2xl text-sm leading-7 text-white/65">{text.contactText}</p></div>
-          <div className="flex shrink-0 flex-wrap gap-3">
-            <Link to="/reservations" className="inline-flex min-h-11 items-center rounded-xl bg-ember-500 px-5 font-semibold text-white hover:bg-ember-400">{text.reserve}</Link>
-            {phoneNumber.replace(/\D/g, '').length >= 8 && <a href={`tel:${phoneNumber}`} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 px-5 font-semibold text-white hover:bg-white/5"><Phone className="h-4 w-4" />{text.call}</a>}
-            {waLink && <a href={waLink} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 px-5 font-semibold text-white hover:bg-white/5"><MessageCircle className="h-4 w-4" />WhatsApp</a>}
+          <div className={cn('hero-food-float order-1 mx-auto w-full max-w-md lg:order-2 lg:max-w-none', reduceMotion && 'motion-reduce:animate-none')}>
+            <div className="relative mx-auto h-60 w-full overflow-hidden rounded-3xl border border-ember-300/50 bg-gradient-to-br from-ember-500/30 via-charcoal-800 to-charcoal-950 shadow-[0_20px_70px_rgba(0,0,0,.5),0_0_32px_rgba(255,128,55,.14)] lg:h-auto lg:aspect-[4/3] lg:w-[min(36vw,34rem)]">
+              {!heroImageFailed ? (
+                <ProgressiveImage
+                  src={heroImage}
+                  alt={locale === 'ar' ? 'طبق مميز طازج من Happy Eating Snack في أكادير' : locale === 'fr' ? 'Plat vedette fraîchement préparé chez Happy Eating Snack à Agadir' : 'A freshly prepared signature dish from Happy Eating Snack in Agadir'}
+                  width="1100"
+                  height="825"
+                  sizes="(max-width: 640px) 90vw, (max-width: 1024px) 60vw, 42vw"
+                  loading="eager"
+                  decoding="async"
+                  fetchpriority="high"
+                  onError={() => setHeroImageFailed(true)}
+                  className="hero-food-image absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div role="img" aria-label={text.imageFallback} className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_50%_35%,rgba(255,128,55,.4),transparent_58%),linear-gradient(135deg,#29201c,#111116_72%)] p-8 text-center">
+                  <span className="font-display text-2xl font-bold text-white sm:text-3xl">{text.imageFallback}</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </motion.div>
+
+        <a href="#categories" aria-label={text.scroll} className="absolute inset-x-0 bottom-5 mx-auto flex w-fit scroll-smooth flex-col items-center gap-1 text-sm font-medium text-white hover:text-white">
+          <span>{text.categories}</span>
+          <ChevronDown className="h-5 w-5 animate-bounce" aria-hidden="true" />
+        </a>
       </section>
+
+      <motion.section id="categories" {...reveal} className="container-app py-16 sm:py-20">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+          <h2 className="heading-lg">{text.categories}</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
+          {orderedCategories.map((category) => {
+            const itemCount = products.filter((product) => product.categoryId === category.id).length;
+            const name = locale === 'ar' ? category.nameAr : locale === 'fr' ? category.nameFr : category.name;
+            return (
+              <Link
+                key={category.id}
+                to={`/menu?category=${encodeURIComponent(category.id)}`}
+                className="category-tile group relative aspect-square overflow-hidden rounded-3xl border border-white/15 bg-charcoal-900 transition-[border-color,box-shadow] duration-200 hover:border-ember-400/80 hover:shadow-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember-300"
+              >
+                <ProgressiveImage
+                  src={category.image.replace('?w=600&q=80', '?auto=format&fit=crop&w=720&q=80')}
+                  alt={name}
+                  width="720"
+                  height="720"
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-4 text-start">
+                  <h3 className="line-clamp-2 text-lg font-bold text-white sm:text-xl">{name}</h3>
+                  <p className="mt-1 text-sm font-medium text-white/85">{itemCount} {text.dishes}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </motion.section>
+
+      {featured.length > 0 && (
+        <motion.section {...reveal} className="container-app py-12 sm:py-16">
+          <h2 className="heading-lg mb-8">{text.popular}</h2>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {featured.map((product) => <ProductCard key={product.id} product={product} />)}
+          </div>
+        </motion.section>
+      )}
+
+      {topRated.length > 0 && (
+        <motion.section {...reveal} className="bg-charcoal-900/55 py-16 sm:py-20">
+          <div className="container-app">
+            <h2 className="heading-lg mb-3">{text.ratings}</h2>
+            <p className="mb-8 text-sm text-white/75">{text.ratingNote}</p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {topRated.map((product) => (
+                <Link key={product.id} to={`/product/${product.id}`} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-charcoal-950/70 p-4 hover:border-ember-400/50">
+                  <ProgressiveImage src={product.image.replace('?w=800&q=80', '?auto=format&fit=crop&w=240&q=75')} alt={product.name} width="72" height="72" loading="lazy" decoding="async" className="h-18 w-18 rounded-xl object-cover" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block line-clamp-2 font-semibold text-white">{product.name}</span>
+                    <span className="mt-1 flex items-center gap-1 text-sm text-white/85"><Star className="h-4 w-4 fill-gold-400 text-gold-400" aria-hidden="true" />{product.rating.toFixed(1)}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+      )}
+
+      <motion.section {...reveal} className="container-app py-16 sm:py-20">
+        <h2 className="heading-lg mb-8">{text.gallery}</h2>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          {products.slice(0, 6).map((product) => (
+            <ProgressiveImage
+              key={product.id}
+              src={product.image.replace('?w=800&q=80', '?auto=format&fit=crop&w=720&q=75')}
+              alt={product.name}
+              width="720"
+              height="540"
+              loading="lazy"
+              decoding="async"
+              className="aspect-[4/3] w-full rounded-2xl object-cover"
+            />
+          ))}
+        </div>
+      </motion.section>
     </div>
   );
 }
-

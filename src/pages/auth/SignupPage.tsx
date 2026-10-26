@@ -8,18 +8,30 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 4) {
-      setError('Password must be at least 4 characters');
+    setError('');
+    setMessage('');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
-    const res = signup(name, email, password);
-    if (res.ok) navigate('/account');
-    else setError(res.error || 'Signup failed');
+    setSubmitting(true);
+    try {
+      const res = await signup(name, email, password);
+      if (!res.ok) setError(res.error || 'Signup failed');
+      else if (res.needsEmailConfirmation) setMessage('Check your email to confirm your account, then sign in.');
+      else navigate('/account');
+    } catch (signupError) {
+      setError(signupError instanceof Error ? signupError.message : 'Could not create your account.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -29,7 +41,7 @@ export default function SignupPage() {
           <div className="w-16 h-16 rounded-3xl bg-flame-gradient flex items-center justify-center shadow-glow" />
         </div>
         <h1 className="text-2xl font-bold text-center mb-2">Create account</h1>
-        <p className="text-white/50 text-center mb-8 text-sm">Create an account to save your details and make future visits easier.</p>
+        <p className="text-white/50 text-center mb-8 text-sm">Start earning coins and rewards</p>
 
         <form onSubmit={submit} className="space-y-4">
           <div>
@@ -68,7 +80,8 @@ export default function SignupPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min 4 characters"
+                placeholder="At least 8 characters"
+                minLength={8}
                 required
                 className="w-full rounded-2xl bg-charcoal-900 border border-white/10 pl-11 pr-4 py-3 text-white"
               />
@@ -76,10 +89,11 @@ export default function SignupPage() {
           </div>
 
           {error && <p className="text-sm text-crimson-400 text-center">{error}</p>}
+          {message && <p role="status" className="text-sm text-emerald-300 text-center">{message}</p>}
 
-          <button type="submit" className="w-full h-14 rounded-2xl bg-flame-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-glow">
+          <button type="submit" disabled={submitting} className="w-full h-14 rounded-2xl bg-flame-gradient text-white font-semibold flex items-center justify-center gap-2 shadow-glow disabled:cursor-wait disabled:opacity-60">
             <UserPlus className="w-5 h-5" />
-            Create Account
+            {submitting ? 'Creating account…' : 'Create Account'}
           </button>
         </form>
 
@@ -91,4 +105,3 @@ export default function SignupPage() {
     </div>
   );
 }
-

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CalendarClock, CheckCircle2 } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
+import { DEMO_RESTAURANT } from '../../services/demoData';
 
 export default function ReservationsPage() {
   const { success } = useToast();
@@ -13,7 +14,7 @@ export default function ReservationsPage() {
           <CheckCircle2 className="w-10 h-10" />
         </div>
         <h1 className="heading-lg mb-3">Reservation confirmed</h1>
-        <p className="text-white/60 mb-8">We look forward to hosting you at Casa Flame.</p>
+        <p className="text-white/80 mb-8">We look forward to seeing you at {DEMO_RESTAURANT.name}.</p>
         <button
           onClick={() => setSubmitted(false)}
           className="h-12 px-6 rounded-2xl bg-white/10 border border-white/10 text-white font-semibold"

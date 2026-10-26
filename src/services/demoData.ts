@@ -1,30 +1,26 @@
 import type { Category, Product } from '../types';
 
 export const DEMO_RESTAURANT = {
-  name: 'emynfc',
-  tagline: 'Restaurant - Fast Food',
-  description: 'Modern restaurant where flavors meet fire.',
-  phone: '+212 638 571 166',
-  whatsapp: '+212638571166',
-  email: 'youssefelamyn890@gmail.com',
-  address: 'Inzegani Tarasst',
-  city: 'Inzegani',
-  hours: 'Mon - Sun - 11:00 - 23:30',
+  name: 'Happy Eating Snack',
+  phone: '07 15 65 22 44',
+  phoneInternational: '+212715652244',
+  whatsapp: '+212715652244',
+  address: 'Agadir, Morocco',
+  city: 'Agadir',
+  mapsUrl: 'https://maps.app.goo.gl/SArFgSYgpwuaVbUS7',
+  mapCoordinates: '30.3529382,-9.5552927',
+  instagram: 'https://www.instagram.com/happy.eating.snack/',
   heroImage: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80',
-  social: {
-    instagram: 'https://instagram.com/emynfc',
-    facebook: 'https://facebook.com/emynfc',
-    tiktok: 'https://tiktok.com/@emynfc',
-  },
+  openingHours: { open: '10:00', close: '01:00', timeZone: 'Africa/Casablanca' },
 };
 
 export const CATEGORIES: Category[] = [
   { id: 'burgers', name: 'Burgers', nameAr: 'Burgers', nameFr: 'Burgers', icon: 'B', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=80' },
-  { id: 'tacos', name: 'Tacos', nameAr: 'Tacos', nameFr: 'Tacos', icon: 'T', image: 'https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=600&q=80' },
-  { id: 'pizza', name: 'Pizza', nameAr: 'Pizza', nameFr: 'Pizza', icon: 'P', image: 'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=600&q=80' },
   { id: 'moroccan', name: 'Moroccan', nameAr: 'Moroccan', nameFr: 'Marocain', icon: 'M', image: 'https://images.unsplash.com/photo-1544378730-8b5104b18790?w=600&q=80' },
-  { id: 'desserts', name: 'Desserts', nameAr: 'Desserts', nameFr: 'Desserts', icon: 'D', image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=600&q=80' },
+  { id: 'pizza', name: 'Pizza', nameAr: 'Pizza', nameFr: 'Pizza', icon: 'P', image: 'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=600&q=80' },
+  { id: 'tacos', name: 'Tacos', nameAr: 'Tacos', nameFr: 'Tacos', icon: 'T', image: 'https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=600&q=80' },
   { id: 'drinks', name: 'Drinks', nameAr: 'Drinks', nameFr: 'Boissons', icon: 'K', image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=80' },
+  { id: 'desserts', name: 'Desserts', nameAr: 'Desserts', nameFr: 'Desserts', icon: 'D', image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=600&q=80' },
 ];
 
 export const PRODUCTS: Product[] = [

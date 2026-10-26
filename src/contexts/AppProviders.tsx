@@ -6,6 +6,7 @@ import { AdminAuthProvider } from './AdminAuthContext';
 import { ProductsProvider } from './ProductsContext';
 import { OrdersProvider } from './OrdersContext';
 import { ReservationsProvider } from './ReservationsContext';
+import { CoinsProvider } from './CoinsContext';
 import { FavoritesProvider } from './FavoritesContext';
 import { CartProvider } from './CartContext';
 
@@ -18,9 +19,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
             <ProductsProvider>
               <OrdersProvider>
                 <ReservationsProvider>
-                  <FavoritesProvider>
-                    <CartProvider>{children}</CartProvider>
-                  </FavoritesProvider>
+                  <CoinsProvider>
+                    <FavoritesProvider>
+                      <CartProvider>{children}</CartProvider>
+                    </FavoritesProvider>
+                  </CoinsProvider>
                 </ReservationsProvider>
               </OrdersProvider>
             </ProductsProvider>
@@ -30,4 +33,3 @@ export function AppProviders({ children }: { children: ReactNode }) {
     </LanguageProvider>
   );
 }
-

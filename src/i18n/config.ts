@@ -9,6 +9,6 @@ export interface LanguageMeta {
 
 export const LANGUAGES: LanguageMeta[] = [
   { code: 'en', label: 'English', nativeLabel: 'English', dir: 'ltr' },
-  { code: 'fr', label: 'French', nativeLabel: 'Francais', dir: 'ltr' },
+  { code: 'fr', label: 'French', nativeLabel: 'Français', dir: 'ltr' },
   { code: 'ar', label: 'Arabic', nativeLabel: 'العربية', dir: 'rtl' },
 ];

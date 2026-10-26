@@ -1,7 +1,8 @@
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ClipboardList, CalendarClock, ArrowLeft, Flame, LogOut, HardDrive, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Package, ClipboardList, CalendarClock, ArrowLeft, LogOut, HardDrive, BarChart3 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
+import { DEMO_RESTAURANT } from '../services/demoData';
 
 const items = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
@@ -20,12 +21,10 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-charcoal-950 pb-20 md:pb-0">
       <header className="sticky top-0 z-30 bg-charcoal-900/95 backdrop-blur-xl border-b border-white/10 h-16 flex items-center px-4">
         <Link to="/admin" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-2xl bg-flame-gradient flex items-center justify-center">
-            <Flame className="w-4 h-4 text-white" />
-          </div>
+          <img src="/happy-eating-logo.png" alt="" width="36" height="42" className="h-9 w-auto object-contain" />
           <div>
-            <p className="font-bold text-sm leading-none">Admin</p>
-            <p className="text-[10px] text-white/50 mt-1">emynfc</p>
+            <p className="font-bold text-sm leading-none">Restaurant Desk</p>
+            <p className="text-[10px] text-white/75 mt-1">{DEMO_RESTAURANT.name}</p>
           </div>
         </Link>
         <button
@@ -92,4 +91,3 @@ export default function AdminLayout() {
     </div>
   );
 }	
-
