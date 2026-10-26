@@ -1,5 +1,5 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ClipboardList, CalendarClock, ArrowLeft, Flame, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ClipboardList, CalendarClock, BarChart3, ArrowLeft, Flame, LogOut } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 
@@ -8,6 +8,7 @@ const items = [
   { to: '/admin/orders', icon: ClipboardList, label: 'Orders' },
   { to: '/admin/products', icon: Package, label: 'Products' },
   { to: '/admin/reservations', icon: CalendarClock, label: 'Reservations' },
+  { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
 ];
 
 export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
