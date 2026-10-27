@@ -1,50 +1,177 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import {
-  signupUser,
-  loginUser,
-  logoutUser,
-  getCurrentUser,
-  type StoredUser,
-} from '../lib/userStorage';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { clearLegacyUserCredentials, setCurrentUserId, type StoredUser } from '../lib/userStorage';
+import { supabase, supabaseConfigured } from '../lib/supabase';
+
+interface AuthResult {
+  ok: boolean;
+  error?: string;
+  needsEmailConfirmation?: boolean;
+}
 
 interface AuthContextValue {
   user: StoredUser | null;
   ready: boolean;
-  signup: (name: string, email: string, password: string) => { ok: boolean; error?: string };
-  login: (email: string, password: string) => { ok: boolean; error?: string };
-  logout: () => void;
+  supabaseConfigured: boolean;
+  signup: (name: string, email: string, phone: string, password: string) => Promise<AuthResult>;
+  login: (email: string, password: string) => Promise<AuthResult>;
+  updateProfile: (profile: Pick<StoredUser, 'name' | 'phone' | 'address'>) => Promise<AuthResult>;
+  requestPasswordReset: (email: string) => Promise<AuthResult>;
+  updatePassword: (password: string) => Promise<AuthResult>;
+  logout: () => Promise<AuthResult>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+function toStoredUser(user: SupabaseUser | null): StoredUser | null {
+  if (!user) return null;
+  const metadata = user.user_metadata;
+  return {
+    id: user.id,
+    name: typeof metadata.full_name === 'string'
+      ? metadata.full_name
+      : typeof metadata.name === 'string' ? metadata.name : '',
+    email: user.email || '',
+    phone: typeof metadata.phone === 'string' ? metadata.phone : user.phone || '',
+    address: typeof metadata.delivery_address === 'string'
+      ? metadata.delivery_address
+      : typeof metadata.address === 'string' ? metadata.address : '',
+    createdAt: Date.parse(user.created_at),
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<StoredUser | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setUser(getCurrentUser());
-    setReady(true);
+    clearLegacyUserCredentials();
+
+    if (!supabase) {
+      setReady(true);
+      return;
+    }
+
+    let mounted = true;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextUser = toStoredUser(session?.user ?? null);
+      setCurrentUserId(nextUser?.id ?? null);
+      setUser(nextUser);
+      setReady(true);
+    });
+
+    void supabase.auth.getSession().then(({ data, error }) => {
+      if (!mounted) return;
+      if (error) {
+        console.error('Could not restore the Supabase session:', error.message);
+      }
+      const currentUser = toStoredUser(data.session?.user ?? null);
+      setCurrentUserId(currentUser?.id ?? null);
+      setUser(currentUser);
+      setReady(true);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const signup = (name: string, email: string, password: string) => {
-    const res = signupUser(name, email, password);
-    if (res.ok && res.user) setUser(res.user);
-    return { ok: res.ok, error: res.error };
+  const signup = async (name: string, email: string, phone: string, password: string): Promise<AuthResult> => {
+    if (!supabase) return { ok: false, error: 'Account services are unavailable. Please try again later.' };
+
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+      options: {
+        data: { full_name: name.trim(), phone: phone.trim() },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+
+    if (error) return { ok: false, error: error.message };
+
+    if (data.session?.user) {
+      const nextUser = toStoredUser(data.session.user);
+      setCurrentUserId(nextUser?.id ?? null);
+      setUser(nextUser);
+      return { ok: true };
+    }
+
+    return { ok: true, needsEmailConfirmation: true };
   };
 
-  const login = (email: string, password: string) => {
-    const res = loginUser(email, password);
-    if (res.ok && res.user) setUser(res.user);
-    return { ok: res.ok, error: res.error };
+  const login = async (email: string, password: string): Promise<AuthResult> => {
+    if (!supabase) return { ok: false, error: 'Account services are unavailable. Please try again later.' };
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    if (error) return { ok: false, error: error.message };
+
+    const nextUser = toStoredUser(data.user);
+    setCurrentUserId(nextUser?.id ?? null);
+    setUser(nextUser);
+    return { ok: true };
   };
 
-  const logout = () => {
-    logoutUser();
+  const updateProfile = async (profile: Pick<StoredUser, 'name' | 'phone' | 'address'>): Promise<AuthResult> => {
+    if (!supabase) return { ok: false, error: 'Account services are unavailable. Please try again later.' };
+
+    const { data, error } = await supabase.auth.updateUser({
+      data: {
+        full_name: profile.name.trim(),
+        phone: profile.phone.trim(),
+        delivery_address: profile.address.trim(),
+      },
+    });
+
+    if (error) return { ok: false, error: error.message };
+
+    const nextUser = toStoredUser(data.user);
+    setCurrentUserId(nextUser?.id ?? null);
+    setUser(nextUser);
+    return { ok: true };
+  };
+
+  const requestPasswordReset = async (email: string): Promise<AuthResult> => {
+    if (!supabase) return { ok: false, error: 'Account services are unavailable. Please try again later.' };
+
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim().toLowerCase(),
+      { redirectTo: `${window.location.origin}/reset-password` }
+    );
+
+    return error ? { ok: false, error: error.message } : { ok: true };
+  };
+
+  const updatePassword = async (password: string): Promise<AuthResult> => {
+    if (!supabase) return { ok: false, error: 'Account services are unavailable. Please try again later.' };
+
+    const { data, error } = await supabase.auth.updateUser({ password });
+    if (error) return { ok: false, error: error.message };
+
+    const nextUser = toStoredUser(data.user);
+    setCurrentUserId(nextUser?.id ?? null);
+    setUser(nextUser);
+    return { ok: true };
+  };
+
+  const logout = async (): Promise<AuthResult> => {
+    if (!supabase) return { ok: false, error: 'Account services are unavailable. Please try again later.' };
+
+    const { error } = await supabase.auth.signOut();
+    if (error) return { ok: false, error: error.message };
+
+    setCurrentUserId(null);
     setUser(null);
+    return { ok: true };
   };
 
   return (
-    <AuthContext.Provider value={{ user, ready, signup, login, logout }}>
+    <AuthContext.Provider value={{ user, ready, supabaseConfigured, signup, login, updateProfile, requestPasswordReset, updatePassword, logout }}>
       {children}
     </AuthContext.Provider>
   );
