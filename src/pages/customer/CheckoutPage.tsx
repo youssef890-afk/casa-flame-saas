@@ -1,19 +1,29 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CreditCard, MapPin, Truck, Wallet } from 'lucide-react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { MapPin, Truck, Wallet } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { formatPrice, cn } from '../../lib/utils';
 
 export default function CheckoutPage() {
   const [method, setMethod] = useState('delivery');
-  const [payment, setPayment] = useState('card');
   const { subtotal, lines, clear } = useCart();
+  const { user, ready } = useAuth();
   const { success } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const delivery = method === 'delivery' && subtotal > 0 ? 15 : 0;
   const total = subtotal + delivery;
+
+  if (!ready) {
+    return <div className="container-app py-20 text-center text-white/60">Loading your account…</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: `${location.pathname}${location.search}` }} replace />;
+  }
 
   return (
     <div className="container-app py-10">
@@ -69,24 +79,9 @@ export default function CheckoutPage() {
 
           <div className="rounded-3xl bg-charcoal-900/60 border border-white/5 p-6">
             <h3 className="font-bold mb-5">Payment</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { id: 'cash', label: 'Cash', icon: Wallet },
-                { id: 'card', label: 'Card', icon: CreditCard },
-              ].map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => setPayment(p.id)}
-                  className={cn(
-                    'p-4 rounded-2xl border flex flex-col items-center gap-2 transition',
-                    payment === p.id ? 'border-ember-500 bg-ember-500/10' : 'border-white/10'
-                  )}
-                >
-                  <p.icon className={cn('w-5 h-5', payment === p.id ? 'text-ember-400' : 'text-white/50')} />
-                  <span className="text-xs font-medium">{p.label}</span>
-                </button>
-              ))}
+            <div className="p-4 rounded-2xl border border-ember-500 bg-ember-500/10 flex items-center gap-3">
+              <Wallet className="w-5 h-5 text-ember-400" />
+              <span className="text-sm font-medium">Cash {method === 'delivery' ? 'on delivery' : 'on pickup'}</span>
             </div>
           </div>
         </div>

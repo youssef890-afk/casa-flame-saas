@@ -13,6 +13,7 @@ import ReservationsPage from './pages/customer/ReservationsPage';
 import AccountPage from './pages/customer/AccountPage';
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/DashboardPage';
 import AdminProducts from './pages/admin/ProductsPage';
@@ -28,6 +29,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/protocol" element={<ProtocolPage />} />
 

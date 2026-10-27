@@ -14,6 +14,8 @@ interface AuthContextValue {
   ready: boolean;
   signup: (name: string, email: string, password: string) => Promise<AuthResult>;
   login: (email: string, password: string) => Promise<AuthResult>;
+  requestPasswordReset: (email: string) => Promise<AuthResult>;
+  updatePassword: (password: string) => Promise<AuthResult>;
   logout: () => Promise<AuthResult>;
 }
 
@@ -97,6 +99,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   };
 
+  const requestPasswordReset = async (email: string): Promise<AuthResult> => {
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim().toLowerCase(),
+      { redirectTo: `${window.location.origin}/reset-password` }
+    );
+
+    return error ? { ok: false, error: error.message } : { ok: true };
+  };
+
+  const updatePassword = async (password: string): Promise<AuthResult> => {
+    const { data, error } = await supabase.auth.updateUser({ password });
+    if (error) return { ok: false, error: error.message };
+
+    const nextUser = toStoredUser(data.user);
+    setCurrentUserId(nextUser?.id ?? null);
+    setUser(nextUser);
+    return { ok: true };
+  };
+
   const logout = async (): Promise<AuthResult> => {
     const { error } = await supabase.auth.signOut();
     if (error) return { ok: false, error: error.message };
@@ -107,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, ready, signup, login, logout }}>
+    <AuthContext.Provider value={{ user, ready, signup, login, requestPasswordReset, updatePassword, logout }}>
       {children}
     </AuthContext.Provider>
   );

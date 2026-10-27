@@ -17,18 +17,60 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
+function readCart(value: string | null): CartLine[] {
+  if (!value) return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((line): line is CartLine =>
+      typeof line === 'object'
+      && line !== null
+      && 'product' in line
+      && typeof line.product === 'object'
+      && line.product !== null
+      && 'id' in line.product
+      && typeof line.product.id === 'string'
+      && 'quantity' in line
+      && typeof line.quantity === 'number'
+      && Number.isInteger(line.quantity)
+      && line.quantity > 0
+    );
+  } catch {
+    return [];
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [lines, setLines] = useState<CartLine[]>([]);
 
   useEffect(() => {
     try {
-      const raw = scopedGet(KEY);
-      setLines(raw ? JSON.parse(raw) : []);
+      if (!user) {
+        setLines(readCart(scopedGet(KEY)));
+        return;
+      }
+
+      const guestLines = readCart(localStorage.getItem(`${KEY}__guest`));
+      const userKey = `${KEY}__${user.id}`;
+      const userLines = readCart(localStorage.getItem(userKey));
+      const merged = new Map(userLines.map((line) => [line.product.id, line]));
+
+      for (const guestLine of guestLines) {
+        const existing = merged.get(guestLine.product.id);
+        merged.set(guestLine.product.id, {
+          ...guestLine,
+          quantity: guestLine.quantity + (existing?.quantity ?? 0),
+        });
+      }
+
+      const nextLines = [...merged.values()];
+      if (guestLines.length > 0) localStorage.setItem(userKey, JSON.stringify(nextLines));
+      setLines(nextLines);
     } catch {
-      setLines([]);
+      setLines(readCart(scopedGet(KEY)));
     }
-  }, [user?.id]);
+  }, [user]);
 
   const persist = (arr: CartLine[]) => {
     setLines(arr);

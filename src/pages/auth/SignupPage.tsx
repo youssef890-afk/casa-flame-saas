@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { UserPlus, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -11,7 +11,12 @@ export default function SignupPage() {
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const { signup } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+  const requestedPath = (location.state as { from?: string } | null)?.from;
+  const returnTo = requestedPath?.startsWith('/') && !requestedPath.startsWith('//')
+    ? requestedPath
+    : '/account';
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +31,7 @@ export default function SignupPage() {
       const res = await signup(name, email, password);
       if (!res.ok) setError(res.error || 'Signup failed');
       else if (res.needsEmailConfirmation) setMessage('Check your email to confirm your account, then sign in.');
-      else navigate('/account');
+      else navigate(returnTo, { replace: true });
     } catch (signupError) {
       setError(signupError instanceof Error ? signupError.message : 'Could not create your account.');
     } finally {
@@ -98,7 +103,7 @@ export default function SignupPage() {
         </form>
 
         <p className="text-center text-sm text-white/50 mt-6">
-          Already have an account? <Link to="/login" className="text-ember-400 font-medium">Sign in</Link>
+          Already have an account? <Link to="/login" state={{ from: returnTo }} className="text-ember-400 font-medium">Sign in</Link>
         </p>
         <Link to="/" className="block text-center text-sm text-white/40 mt-4">Back to site</Link>
       </div>
