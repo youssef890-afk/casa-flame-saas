@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { clearLegacyUserCredentials, setCurrentUserId, type StoredUser } from '../lib/userStorage';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseConfigured } from '../lib/supabase';
 
 interface AuthResult {
   ok: boolean;
@@ -12,6 +12,7 @@ interface AuthResult {
 interface AuthContextValue {
   user: StoredUser | null;
   ready: boolean;
+  supabaseConfigured: boolean;
   signup: (name: string, email: string, password: string) => Promise<AuthResult>;
   login: (email: string, password: string) => Promise<AuthResult>;
   requestPasswordReset: (email: string) => Promise<AuthResult>;
@@ -37,6 +38,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     clearLegacyUserCredentials();
+
+    if (!supabase) {
+      setReady(true);
+      return;
+    }
 
     let mounted = true;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -64,6 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signup = async (name: string, email: string, password: string): Promise<AuthResult> => {
+    if (!supabase) return { ok: false, error: 'Account services are unavailable. Please try again later.' };
+
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
@@ -86,6 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (email: string, password: string): Promise<AuthResult> => {
+    if (!supabase) return { ok: false, error: 'Account services are unavailable. Please try again later.' };
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
@@ -100,6 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const requestPasswordReset = async (email: string): Promise<AuthResult> => {
+    if (!supabase) return { ok: false, error: 'Account services are unavailable. Please try again later.' };
+
     const { error } = await supabase.auth.resetPasswordForEmail(
       email.trim().toLowerCase(),
       { redirectTo: `${window.location.origin}/reset-password` }
@@ -109,6 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updatePassword = async (password: string): Promise<AuthResult> => {
+    if (!supabase) return { ok: false, error: 'Account services are unavailable. Please try again later.' };
+
     const { data, error } = await supabase.auth.updateUser({ password });
     if (error) return { ok: false, error: error.message };
 
@@ -119,6 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async (): Promise<AuthResult> => {
+    if (!supabase) return { ok: false, error: 'Account services are unavailable. Please try again later.' };
+
     const { error } = await supabase.auth.signOut();
     if (error) return { ok: false, error: error.message };
 
@@ -128,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, ready, signup, login, requestPasswordReset, updatePassword, logout }}>
+    <AuthContext.Provider value={{ user, ready, supabaseConfigured, signup, login, requestPasswordReset, updatePassword, logout }}>
       {children}
     </AuthContext.Provider>
   );

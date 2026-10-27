@@ -16,6 +16,11 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!supabase) {
+      setCheckingLink(false);
+      return;
+    }
+
     let active = true;
     const recoveryLink = new URLSearchParams(window.location.hash.slice(1)).get('type') === 'recovery';
 
@@ -43,6 +48,10 @@ export default function ResetPasswordPage() {
     event.preventDefault();
     setError('');
     setMessage('');
+    if (!supabase) {
+      setError('Account services are unavailable. Please try again later.');
+      return;
+    }
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
@@ -78,7 +87,14 @@ export default function ResetPasswordPage() {
         </div>
         <h1 className="text-2xl font-bold text-center mb-2">Reset password</h1>
 
-        {checkingLink ? (
+        {!supabase ? (
+          <div className="space-y-5">
+            <p role="alert" className="text-white/60 text-center my-8 text-sm">
+              Account services are temporarily unavailable. Please try again later.
+            </p>
+            <Link to="/login" className="block text-center text-ember-400 font-medium">Back to sign in</Link>
+          </div>
+        ) : checkingLink ? (
           <p role="status" className="text-white/50 text-center my-8 text-sm">Verifying your reset link…</p>
         ) : !validLink ? (
           <div className="space-y-5">
