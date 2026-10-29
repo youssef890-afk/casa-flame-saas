@@ -1,70 +1,104 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { supabase, supabaseConfigured } from '../lib/supabase';
 
-const DEFAULT_EMAIL = 'admin@emynfc.com';
-const DEFAULT_PASSWORD = '1234';
-const SESSION_KEY = 'casa_admin_session';
-const CREDS_KEY = 'casa_admin_creds';
+const ADMIN_ROLES = new Set(['super_admin', 'restaurant_owner']);
 
 interface AdminAuthContextValue {
   isAdmin: boolean;
-  login: (email: string, password: string, remember?: boolean) => boolean;
-  logout: () => void;
-  changePassword: (oldPw: string, newPw: string) => boolean;
+  loading: boolean;
+  login: (email: string, password: string, remember?: boolean) => Promise<boolean>;
+  logout: () => Promise<void>;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextValue | undefined>(undefined);
 
-function getCreds() {
-  try {
-    const raw = localStorage.getItem(CREDS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return { email: DEFAULT_EMAIL, password: DEFAULT_PASSWORD };
+function getAdminRoleFromUser(user: User | { app_metadata?: Record<string, any>; user_metadata?: Record<string, any> } | null | undefined) {
+  const role = (user as { app_metadata?: Record<string, any>; user_metadata?: Record<string, any> } | null)?.app_metadata?.role
+    ?? (user as { app_metadata?: Record<string, any>; user_metadata?: Record<string, any> } | null)?.user_metadata?.role;
+  return typeof role === 'string' && ADMIN_ROLES.has(role) ? role : null;
 }
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const session = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
-      setIsAdmin(session === '1');
-    } catch {}
+    const client = supabase;
+    if (!supabaseConfigured || !client) {
+      setIsAdmin(false);
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    const syncAdminState = async () => {
+      try {
+        const { data: { session }, error } = await client.auth.getSession();
+        if (!isMounted) return;
+        if (error) {
+          console.error('Could not read the Supabase admin session:', error.message);
+          setIsAdmin(false);
+          return;
+        }
+
+        const role = getAdminRoleFromUser(session?.user ?? null);
+        setIsAdmin(Boolean(role));
+      } catch (error) {
+        console.error('Unexpected admin session error:', error);
+        setIsAdmin(false);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void syncAdminState();
+
+    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
+      const role = getAdminRoleFromUser(session?.user ?? null);
+      setIsAdmin(Boolean(role));
+      setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = (email: string, password: string, remember = true) => {
-    const creds = getCreds();
-    if (email.trim() === creds.email && password === creds.password) {
-      try {
-        if (remember) {
-          localStorage.setItem(SESSION_KEY, '1');
-        } else {
-          sessionStorage.setItem(SESSION_KEY, '1');
-        }
-      } catch {}
-      setIsAdmin(true);
-      return true;
+  const login = async (email: string, password: string, _remember = true) => {
+    const client = supabase;
+    if (!supabaseConfigured || !client) return false;
+
+    const { data, error } = await client.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    if (error || !data.user) {
+      setIsAdmin(false);
+      return false;
     }
-    return false;
+
+    const role = getAdminRoleFromUser(data.user);
+    const allowed = Boolean(role);
+    setIsAdmin(allowed);
+    return allowed;
   };
 
-  const logout = () => {
-    try {
-      localStorage.removeItem(SESSION_KEY);
-      sessionStorage.removeItem(SESSION_KEY);
-    } catch {}
+  const logout = async () => {
+    if (supabaseConfigured && supabase) {
+      await supabase.auth.signOut();
+    }
     setIsAdmin(false);
   };
 
-  const changePassword = (oldPw: string, newPw: string) => {
-    const creds = getCreds();
-    if (oldPw !== creds.password) return false;
-    try { localStorage.setItem(CREDS_KEY, JSON.stringify({ ...creds, password: newPw })); } catch {}
-    return true;
-  };
-
   return (
-    <AdminAuthContext.Provider value={{ isAdmin, login, logout, changePassword }}>
+    <AdminAuthContext.Provider value={{ isAdmin, loading, login, logout }}>
       {children}
     </AdminAuthContext.Provider>
   );

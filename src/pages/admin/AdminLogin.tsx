@@ -8,16 +8,24 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const { login } = useAdminAuth();
   const navigate = useNavigate();
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(email, password, remember)) {
+    setError('');
+    setSubmitting(true);
+
+    const ok = await login(email, password, remember);
+    setSubmitting(false);
+
+    if (ok) {
       navigate('/admin');
-    } else {
-      setError('Email or password incorrect');
+      return;
     }
+
+    setError('Your account is not authorized for admin access.');
   };
 
   return (
@@ -28,7 +36,7 @@ export default function AdminLogin() {
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold">Admin Access</h1>
-          <p className="text-white/50 text-sm mt-1">Sign in to manage the restaurant</p>
+          <p className="text-white/50 text-sm mt-1">Sign in with your authorized restaurant account</p>
         </div>
 
         <form onSubmit={submit} className="space-y-4">
@@ -40,7 +48,7 @@ export default function AdminLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@emynfc.com"
+                placeholder="admin@yourrestaurant.com"
                 required
                 className="w-full rounded-2xl bg-charcoal-900 border border-white/10 pl-11 pr-4 py-3 text-white"
               />
@@ -76,17 +84,12 @@ export default function AdminLogin() {
 
           <button
             type="submit"
-            className="w-full h-14 rounded-2xl bg-flame-gradient text-white font-semibold shadow-glow"
+            disabled={submitting}
+            className="w-full h-14 rounded-2xl bg-flame-gradient text-white font-semibold shadow-glow disabled:opacity-60"
           >
-            Sign In
+            {submitting ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-
-        <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10 text-center">
-          <p className="text-xs text-white/50">Default credentials:</p>
-          <p className="text-xs text-white/80 mt-1 font-mono">admin@emynfc.com</p>
-          <p className="text-xs text-white/80 font-mono">1234</p>
-        </div>
 
         <button onClick={() => navigate('/')} className="w-full mt-4 text-sm text-white/40 hover:text-white">
           Back to site
